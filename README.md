@@ -1,11 +1,14 @@
 # TypeLogic.LiskovWingSubstitution
 
-[![NuGet](https://img.shields.io/badge/nuget-not%20yet%20available-lightgrey.svg)](https://www.nuget.org/packages/TypeLogic.LiskovWingSubstitution)
+[![NuGet](https://img.shields.io/badge/nuget-v0.1.0-blue.svg)](https://www.nuget.org/packages/TypeLogic.LiskovWingSubstitution)
+[![Downloads](https://img.shields.io/nuget/dt/TypeLogic.LiskovWingSubstitution.svg)](https://www.nuget.org/packages/TypeLogic.LiskovWingSubstitution)
 [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-2.0-blue.svg)](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-4.0%2B-blue.svg)](https://dotnet.microsoft.com/)
 [![Tests](https://img.shields.io/badge/Tests-.NET%204.6.2--8.0-blue.svg)](https://dotnet.microsoft.com/)
 
-A .NET library implementing the Liskov/Wing Substitution Principle for type variance checking (including generic typeParameters constraints validation). This project emerged from previous R&D tests dealing with .NET generics: I needed an additional simple way to verify type variance against GenericTypeDefinition, complementing .NET's built-in type system capabilities.
+A .NET library implementing the Liskov/Wing Substitution Principle for type variance checking (including generic typeParameters constraints validation). 
+
+This project emerged from previous R&D tests dealing with .NET generics: I needed an additional simple way to verify type variance against GenericTypeDefinition, complementing .NET's built-in type system capabilities.
 
 What started as a proof-of-concept to simplify variance checking turned into a full-fledged library that extends .NET's type system that you may find educational or even practicalin some cases. The implementation is based from Barbara Liskov's and Jeannette Wing's work on behavioral subtyping, providing additional variance checking capabilities when working with GenericTypeDefinitions (especially in cases where non-generic Type inheritance is absent, as illustrated in the examples).
 
@@ -91,6 +94,8 @@ The library implements comprehensive type variance checking:
 
 ### Instance Conversion
 
+_still in progress_
+
 Provides safe instance conversion with variance checking:
 
 - Runtime type checking
@@ -136,4 +141,3 @@ This project is based on the work of Barbara Liskov and Jeannette Wing on the Su
 
 - [Barbara Liskov's Substitution Principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle)
 - [Jeannette Wing's work on behavioral subtyping](https://www.cs.cmu.edu/~wing/publications/LiskovWing94.pdf)
-

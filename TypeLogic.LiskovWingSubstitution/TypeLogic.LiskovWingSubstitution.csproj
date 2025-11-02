@@ -5,13 +5,32 @@
     <RootNamespace>TypeLogic.LiskovWingSubstitution</RootNamespace>
     <AssemblyName>TypeLogic.LiskovWingSubstitution</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    
+    <!-- NuGet Package Info -->
     <PackageId>TypeLogic.LiskovWingSubstitution</PackageId>
-    <Authors>TypeLogic</Authors>
+    <Version>0.1.0</Version>
+    <Authors>Max Brönnimann</Authors>
     <Company>TypeLogic</Company>
     <Product>TypeLogic.LiskovWingSubstitution</Product>
-    <Description>A library implementing Liskov Wing Substitution principle for type variance including type constraints checking</Description>
-    <Copyright>Copyright � Max Br�nnimann 2023</Copyright>
-    <PackageTags>typevariance;liskov;substitution;type;variance</PackageTags>
+    <Description>A .NET library implementing the Liskov/Wing Substitution Principle for type variance checking (including generic typeParameters constraints validation). Provides additional variance checking capabilities when working with GenericTypeDefinitions.</Description>
+    <Copyright>Copyright © Max Brönnimann 2013-</Copyright>
+    <PackageTags>typevariance;liskov;substitution;type;variance;generics;constraints;typesystem</PackageTags>
+    
+    <!-- Package Options -->
+    <PackageProjectUrl>https://github.com/magicmoux/TypeLogic.LiskovWingSubstitution</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/magicmoux/TypeLogic.LiskovWingSubstitution</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    
+    <!-- Build Options -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>
