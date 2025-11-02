@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net40;net462</TargetFrameworks>
+    <RootNamespace>TypeLogic.LiskovWingSubstitution</RootNamespace>
+    <AssemblyName>TypeLogic.LiskovWingSubstitution</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>TypeLogic.LiskovWingSubstitution</PackageId>
+    <Authors>TypeLogic</Authors>
+    <Company>TypeLogic</Company>
+    <Product>TypeLogic.LiskovWingSubstitution</Product>
+    <Description>A library implementing Liskov Wing Substitution principle for type variance including type constraints checking</Description>
+    <Copyright>Copyright � Max Br�nnimann 2023</Copyright>
+    <PackageTags>typevariance;liskov;substitution;type;variance</PackageTags>
+  </PropertyGroup>
+
+</Project>
