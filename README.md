@@ -1,6 +1,6 @@
 # TypeLogic.LiskovWingSubstitution
 
-A .NET library implementing the Liskov/Wing Substitution Principle for type variance checking with constraint validation. This project emerged from previous R&D tests dealing with .NET generics complexities : I needed a reliable library to simply check that type Variance is applicable against a GenericTypeDefinition, which led to this implementation of the Liskov/Wing Substitution Principle.
+A .NET library implementing the Liskov/Wing Substitution Principle for type variance checking (including type parameter constraint validation). This project emerged from previous R&D tests dealing with .NET generics complexities : I needed a reliable library to simply check that type Variance is applicable against a GenericTypeDefinition, which led to this implementation of the Liskov/Wing Substitution Principle.
 
 What started as a proof-of-concept to simplify variance checking turned into a full-fledged library that I hope others will find both educational and practical. The implementation draws inspiration from Barbara Liskov's and Jeannette Wing's work on behavioral subtyping, translating their theoretical foundations into practical .NET code that is not handled by the .NET TypeIsAssignableFrom when dealing with GenericTypeDefinitions (especially when there is no non-generic Type).
 
