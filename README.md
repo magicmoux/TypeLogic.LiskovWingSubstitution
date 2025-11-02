@@ -7,7 +7,7 @@
 
 A .NET library implementing the Liskov/Wing Substitution Principle for type variance checking (including generic typeParameters constraints validation). This project emerged from previous R&D tests dealing with .NET generics: I needed an additional simple way to verify type variance against GenericTypeDefinition, complementing .NET's built-in type system capabilities.
 
-What started as a proof-of-concept to simplify variance checking turned into a full-fledged library that extends .NET's type system. The implementation draws inspiration from Barbara Liskov's and Jeannette Wing's work on behavioral subtyping, providing additional variance checking capabilities when working with GenericTypeDefinitions (especially in cases where non-generic Type inheritance is absent, as illustrated in the examples).
+What started as a proof-of-concept to simplify variance checking turned into a full-fledged library that extends .NET's type system that you may find educational or even practicalin some cases. The implementation is based from Barbara Liskov's and Jeannette Wing's work on behavioral subtyping, providing additional variance checking capabilities when working with GenericTypeDefinitions (especially in cases where non-generic Type inheritance is absent, as illustrated in the examples).
 
 ## Features
 
