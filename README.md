@@ -130,11 +130,10 @@ To run the benchmarks:
 dotnet run -c Release --project TypeLogic.LiskovWingSubstitution.Benchmarks
 ```
 
-## Related Projects
+## References
+
+This project is based on the work of Barbara Liskov and Jeannette Wing on the Substitution Principle and behavioral subtyping.
 
 - [Barbara Liskov's Substitution Principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle)
 - [Jeannette Wing's work on behavioral subtyping](https://www.cs.cmu.edu/~wing/publications/LiskovWing94.pdf)
 
-## Acknowledgments
-
-This project is inspired by the work of Barbara Liskov and Jeannette Wing on the Substitution Principle and behavioral subtyping.
