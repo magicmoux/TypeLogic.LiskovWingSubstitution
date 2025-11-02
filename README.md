@@ -1,7 +1,6 @@
 # TypeLogic.LiskovWingSubstitution
 
 [![NuGet](https://img.shields.io/badge/nuget-not%20yet%20available-lightgrey.svg)](https://www.nuget.org/packages/TypeLogic.LiskovWingSubstitution)
-[![Downloads](https://img.shields.io/badge/downloads-not%20yet%20available-lightgrey.svg)](https://www.nuget.org/packages/TypeLogic.LiskovWingSubstitution)
 [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-2.0-blue.svg)](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)
 [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-4.0%2B-blue.svg)](https://dotnet.microsoft.com/)
 [![Tests](https://img.shields.io/badge/Tests-.NET%204.6.2--8.0-blue.svg)](https://dotnet.microsoft.com/)
