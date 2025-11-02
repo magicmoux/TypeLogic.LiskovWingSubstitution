@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net462;net47;net48;net8.0</TargetFrameworks>
@@ -7,6 +7,8 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>C:\Users\max\source\repos\TypeLogic.LiskovWingSubstitution\TypeLogic.LiskovWingSubstitution.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

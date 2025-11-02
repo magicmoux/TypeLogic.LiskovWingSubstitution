@@ -6,9 +6,14 @@
     <AssemblyName>TypeLogic.LiskovWingSubstitution</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     
+    <!-- Assembly Signing -->
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)TypeLogic.LiskovWingSubstitution.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    
     <!-- NuGet Package Info -->
     <PackageId>TypeLogic.LiskovWingSubstitution</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>Max Brönnimann</Authors>
     <Company>TypeLogic</Company>
     <Product>TypeLogic.LiskovWingSubstitution</Product>
