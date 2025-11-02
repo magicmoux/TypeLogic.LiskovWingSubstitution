@@ -2,7 +2,7 @@
 
 A .NET library implementing the Liskov/Wing Substitution Principle for type variance checking with constraint validation. This project emerged from previous R&D tests dealing with .NET generics complexities : I needed a reliable library to simply check that type Variance is applicable against a GenericTypeDefinition, which led to this implementation of the Liskov/Wing Substitution Principle.
 
-What started as a proof-of-concept to simplify variance checking turned into a full-fledged library that I hope others will find both educational and practical. The implementation draws inspiration from Barbara Liskov's and Jeannette Wing's work on behavioral subtyping, translating their theoretical foundations into practical .NET code that is not handled by the .NET TypeIsAssignableFrom when dealing with GenericTypeDefinitions.
+What started as a proof-of-concept to simplify variance checking turned into a full-fledged library that I hope others will find both educational and practical. The implementation draws inspiration from Barbara Liskov's and Jeannette Wing's work on behavioral subtyping, translating their theoretical foundations into practical .NET code that is not handled by the .NET TypeIsAssignableFrom when dealing with GenericTypeDefinitions (especially when there is no non-generic Type).
 
 ## Overview
 
@@ -30,11 +30,7 @@ The library provides a set of extension methods to check these variance relation
 
 ## Installation
 
-The package can be installed via NuGet:
-
-```shell
-dotnet add package TypeLogic.LiskovWingSubstitution
-```
+The package is not yet available
 
 ## Usage
 
@@ -48,6 +44,7 @@ bool isVariant = typeof(List<string>).IsVariantOf(typeof(IEnumerable<object>));
 
 // Check with runtime type information
 bool isVariantWithType = typeof(List<string>).IsVariantOf(typeof(IEnumerable<object>), out Type runtimeType);
+// runtimeType should be IEnumerable<string>
 ```
 
 ### Instance-Based Variance Checking
@@ -55,13 +52,14 @@ bool isVariantWithType = typeof(List<string>).IsVariantOf(typeof(IEnumerable<obj
 ```csharp
 using TypeLogic.LiskovWingSubstitutions;
 
-List<string> instance = new List<string>();
+string instance = "This is a string";
 
-// Check if instance is variant of IEnumerable<object>
-bool isInstanceOf = instance.IsInstanceOf<List<string>, IEnumerable<object>>();
+// Check against a generic Interface that has no non-generic definition
+bool isInstanceOfType = instance.IsInstanceOf(typeof(IEnumerable<>), out var runtimeType);
+// runtimeType should be IEnumerable<char>
 
-// Check with type parameter
-bool isInstanceOfType = instance.IsInstanceOf(typeof(IEnumerable<object>));
+// Check against a generic Interface that has no non-generic definition
+bool isInstanceOfType = instance.IsInstanceOf(typeof(IEquatable<>));
 ```
 
 ### Generic Type Definition Support
@@ -89,14 +87,9 @@ The library implements comprehensive type variance checking:
 - Support for generic type definitions
 - Cached type relationship checks
 
-### Instance Conversion
+### Instance Conversion 
 
-Provides safe instance conversion with variance checking:
-
-- Runtime type checking
-- Generic type parameter validation
-- Type constraint satisfaction verification
-- Conversion caching for performance
+Still in work
 
 ### Performance Optimization
 
@@ -139,7 +132,7 @@ To run the benchmarks:
 dotnet run -c Release --project TypeLogic.LiskovWingSubstitution.Benchmarks
 ```
 
-## Related Projects
+## References
 
 - [Barbara Liskov's Substitution Principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle)
 - [Jeannette Wing's work on behavioral subtyping](https://www.cs.cmu.edu/~wing/publications/LiskovWing94.pdf)
