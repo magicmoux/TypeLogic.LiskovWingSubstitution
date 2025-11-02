@@ -72,8 +72,8 @@ bool isInstanceOfType = instance.IsInstanceOf(typeof(IEquatable<>), out var runt
 ```csharp
 using TypeLogic.LiskovWingSubstitutions;
 
-// Check if List<> is variant of IEnumerable<>
-bool isGenericVariant = typeof(List<>).IsVariantOf(typeof(IEnumerable<>));
+// Check if List<T> is variant of IEnumerable<>
+bool isGenericVariant = typeof(List<int>).IsVariantOf(typeof(IEnumerable<>));
 
 // Convert instance based on generic definition
 string instance = "test";
