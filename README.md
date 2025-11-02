@@ -47,11 +47,21 @@ using TypeLogic.LiskovWingSubstitutions;
 
 List<string> instance = new List<string>();
 
+// Check with type parameter
+bool isInstanceOfType = instance.IsInstanceOf(typeof(IEnumerable<object>));
+```
+
+```csharp
+using TypeLogic.LiskovWingSubstitutions;
+
+string instance = "this is a string";
+
 // Check if instance is variant of IEnumerable<object>
 bool isInstanceOf = instance.IsInstanceOf<List<string>, IEnumerable<object>>();
 
-// Check with type parameter
-bool isInstanceOfType = instance.IsInstanceOf(typeof(IEnumerable<object>));
+// Check with against generic type with the corresponding runtimeType
+bool isInstanceOfType = instance.IsInstanceOf(typeof(IEquatable<>), out var runtimeType);
+// runtimeType should be IEquatable<string>
 ```
 
 ### Generic Type Definition Support
