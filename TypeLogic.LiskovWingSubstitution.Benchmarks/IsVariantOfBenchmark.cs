@@ -7,7 +7,7 @@ using BenchmarkDotNet.Order;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.TypeVarianceExtensions.Tests.TestTypes;
+using TypeLogic.LiskovWingSubstitutions.Tests.TestTypes;
 
 using TypeLogic.LiskovWingSubstitutions;
 
