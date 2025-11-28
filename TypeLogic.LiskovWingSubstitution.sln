@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11222.15 d18.0
+VisualStudioVersion = 18.0.11222.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeLogic.LiskovWingSubstitution", "TypeLogic.LiskovWingSubstitution\TypeLogic.LiskovWingSubstitution.csproj", "{92265B24-4C63-8B01-041B-017459D99BA3}"
 EndProject
@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeLogic.LiskovWingSubstit
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
-		initial-benchmarks.md = initial-benchmarks.md
+		benchmarks\initial-benchmarks.md = benchmarks\initial-benchmarks.md
 		TypeLogic.LiskovWingSubstitution.snk = TypeLogic.LiskovWingSubstitution.snk
 	EndProjectSection
 EndProject
