@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace System.TypeVarianceExtensions.Tests.TestTypes
+namespace TypeLogic.LiskovWingSubstitutions.Tests.TestTypes
 {
     public interface IEntityType
     {

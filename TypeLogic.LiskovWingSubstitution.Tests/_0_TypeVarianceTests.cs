@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.TypeVarianceExtensions.Tests.TestTypes;
+using TypeLogic.LiskovWingSubstitutions.Tests.TestTypes;
 using TypeLogic.LiskovWingSubstitutions;
 using Xunit;
 
 namespace TypeLogic.LiskovWingSubstitutions.Tests
 {
     /// <summary>
-    /// Description résumée pour UnitTest1
+    /// Contains unit tests that verify type variance resolution and runtime substitution behavior.
     /// </summary>
     public class TypeVarianceTests
     {

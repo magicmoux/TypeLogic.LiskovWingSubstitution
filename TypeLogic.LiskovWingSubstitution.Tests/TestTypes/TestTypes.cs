@@ -1,4 +1,6 @@
-﻿namespace System.TypeVarianceExtensions.Tests.TestTypes
+﻿using System;
+
+namespace TypeLogic.LiskovWingSubstitutions.Tests.TestTypes
 {
      /// <summary>
     /// A class to handle range of DateTime instances with customizable precision.

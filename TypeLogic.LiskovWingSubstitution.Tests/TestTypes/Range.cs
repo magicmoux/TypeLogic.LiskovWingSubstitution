@@ -1,6 +1,7 @@
-﻿using System.Data.SqlTypes;
+﻿using System;
+using System.Data.SqlTypes;
 
-namespace System.TypeVarianceExtensions.Tests.TestTypes
+namespace TypeLogic.LiskovWingSubstitutions.Tests.TestTypes
 {
     /// <summary>
     /// A marker interface for Range classes
