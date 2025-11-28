@@ -118,81 +118,23 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Performance
+## Performance (updated)
 
-The library includes comprehensive benchmarks to measure performance across different scenarios. Below are short-run results produced locally (reduced iterations for quicker runs). These numbers are illustrative and will vary by machine, runtime and configuration; run the benchmarks locally with the provided Benchmark project for full, reproducible results.
+Short-run benchmark results (current run) vs initial baseline in `benchmarks-ref/initial-benchmarks.md`.
 
-Benchmark configuration used for this run:
-- Release configuration
-- Reduced warmup/iteration counts for quick local runs
-- Frameworks: .NET Framework 4.6.2, 4.7, 4.8 and .NET 8.0
-
-Summary (mean times)
-
-| Scenario / Framework | Before (ns) | After (ns) | Delta vs Before |
+| Scenario / Framework | Baseline (ns) | Current (ns) | Delta |
 |---|---:|---:|---:|
-| Uncached IsVariantOf - .NET 4.6.2 | 1,298 | 1,397 | -7.6% (regression) |
-| Uncached IsVariantOf - .NET 4.7   | 1,240 | 1,299 | -4.8% (regression) |
-| Uncached IsVariantOf - .NET 4.8   | 1,268 | 1,314 | -3.6% (regression) |
-| Uncached IsVariantOf - .NET 8.0   | 781   | 865   | -10.8% (regression) |
-| Cached IsVariantOf - .NET 4.7     | 42    | 40.3  | +4.0% improvement |
-| Cached IsVariantOf - .NET 4.8     | 44    | 40.4  | +8.1% improvement |
-| Cached IsVariantOf - .NET 8.0     | 13    | 12.3  | +5.6% improvement |
-| List instance IsInstanceOf - .NET 4.7 | 48 | 46.8  | +2.5% improvement |
-| List instance IsInstanceOf - .NET 4.8 | 48 | 45.0  | +6.2% improvement |
-| List instance IsInstanceOf - .NET 8.0 | 12 | 11.8  | +1.6% improvement |
-| Array instance IsInstanceOf - .NET 4.7 | 62 | 61.9  | +0.2% improvement |
-| Array instance IsInstanceOf - .NET 4.8 | 61 | 58.5  | +4.1% improvement |
-| Array instance IsInstanceOf - .NET 8.0 | 12 | 11.7  | +2.1% improvement |
-
-Allocations per operation (approx)
-- Uncached IsVariantOf: increased allocations (depends on scenario/framework) — observed ~3.36 KB in the recent short run
-- Cached / Instance checks: ~24 B (mostly negligible)
+| Uncached IsVariantOf - .NET 4.6.2 | 1396.541 | 1892.235 | -35.5% (regression) |
+| Uncached IsVariantOf - .NET 4.7   | 1299.461 | 1909.931 | -47.0% (regression) |
+| Uncached IsVariantOf - .NET 4.8   | 1313.819 | 1957.479 | -49.0% (regression) |
+| Uncached IsVariantOf - .NET 8.0   | 865.385  | 1287.775 | -48.8% (regression) |
+| Cached IsVariantOf - .NET 4.7     | 40.293   | 36.782  | +8.7% improvement |
+| Cached IsVariantOf - .NET 4.8     | 40.438   | 35.957  | +11.2% improvement |
+| Cached IsVariantOf - .NET 8.0     | 12.268   | 7.813   | +36.3% improvement |
 
 Notes
-- The recent changes added several caches and fast-paths for common patterns (arrays, string -> IEnumerable<char>) and cached generic-definition variance checks. These reduced hot-path costs for the cached and instance checks (small but measurable improvements).
-- The uncached path appears slower in this short-run sampling (regressions vs the prior numbers). This can happen due to benchmark noise, different JIT/runtime conditions, and reduced iteration counts used for quick runs. Run the full BenchmarkDotNet configuration for stable measurements.
-
-To reproduce the full benchmarks:
-
-```bash
-dotnet run -c Release --project TypeLogic.LiskovWingSubstitution.Benchmarks
-```
-
-## Performance comparison vs baseline
-
-Below are the latest short-run benchmark results and comparisons against the baseline stored in `benchmarks-ref/initial-benchmarks.md`.
-
-Summary (mean times, short-run)
-
-| Scenario / Framework | Baseline (ns) | After (ns) | Delta |
-|---|---:|---:|---:|
-| Uncached IsVariantOf - .NET 4.6.2 | 1,396.541 | 1,721.960 | -23.3% (regression) |
-| Uncached IsVariantOf - .NET 4.7   | 1,299.461 | 1,734.660 | -33.5% (regression) |
-| Uncached IsVariantOf - .NET 4.8   | 1,313.819 | 1,751.110 | -33.3% (regression) |
-| Uncached IsVariantOf - .NET 8.0   | 865.385   | 1,242.480 | -43.5% (regression) |
-| Cached IsVariantOf - .NET 4.7     | 40.293    | 42.440  | -5.3% (regression) |
-| Cached IsVariantOf - .NET 4.8     | 40.438    | 42.390  | -4.8% (regression) |
-| Cached IsVariantOf - .NET 8.0     | 12.268    | 16.130  | -31.5% (regression) |
-| List instance IsInstanceOf - .NET 4.7 | 46.795 | 47.710  | -2.0% (regression) |
-| List instance IsInstanceOf - .NET 4.8 | 45.035 | 47.700  | -6.0% (regression) |
-| List instance IsInstanceOf - .NET 8.0 | 11.807 | 13.730  | -16.3% (regression) |
-| Array instance IsInstanceOf - .NET 4.7 | 61.906 | 62.920  | -1.6% (regression) |
-| Array instance IsInstanceOf - .NET 4.8 | 58.494 | 60.890  | -4.1% (regression) |
-| Array instance IsInstanceOf - .NET 8.0 | 11.741 | 13.210  | -12.5% (regression) |
-
-Notes
-- The implemented optimizations (precomputed ancestry/interface maps, handle-keyed caches, pooled arrays removed for compatibility, in-progress markers, and cached delegates) were intended to improve uncached performance. The short-run numbers here show regressions — this is likely due to benchmark noise, differences in runtime JIT, and the reduced iteration counts used for quick runs.
-- For reliable comparisons, run full BenchmarkDotNet runs (default iterations and dedicated runtime) and compare the generated reports.
-
-Baseline file used for comparison: `benchmarks-ref/initial-benchmarks.md`.
-
-To reproduce the exact run used for "After":
-
-```bash
-# short-run quick execution (used in CI/editor)
-dotnet run -c Release --project TypeLogic.LiskovWingSubstitution.Benchmarks --framework net8.0 -- --filter *IsVariantOf*
-```
+- These are short-run, locally produced numbers. Use full BenchmarkDotNet runs for stable results.
+- Baseline data is taken from `benchmarks-ref/initial-benchmarks.md`.
 
 ## References
 
