@@ -7,6 +7,8 @@ using BenchmarkDotNet.Order;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.TypeVarianceExtensions.Tests.TestTypes;
+
 using TypeLogic.LiskovWingSubstitutions;
 
 namespace TypeLogic.LiskovWingSubstitution.Benchmarks
@@ -21,25 +23,25 @@ namespace TypeLogic.LiskovWingSubstitution.Benchmarks
             public Config()
             {
                 AddDiagnoser(MemoryDiagnoser.Default);
-                // Add jobs for each framework
+                // Add jobs for each framework (reduced counts for quick local run)
                 AddJob(Job.Default.WithRuntime(ClrRuntime.Net462)
-                    .WithWarmupCount(3)
-                    .WithIterationCount(15)
+                    .WithWarmupCount(1)
+                    .WithIterationCount(3)
                     .WithId(".NET 4.6.2"));
 
                 AddJob(Job.Default.WithRuntime(ClrRuntime.Net47)
-                    .WithWarmupCount(3)
-                    .WithIterationCount(15)
+                    .WithWarmupCount(1)
+                    .WithIterationCount(3)
                     .WithId(".NET 4.7"));
 
                 AddJob(Job.Default.WithRuntime(ClrRuntime.Net48)
-                    .WithWarmupCount(3)
-                    .WithIterationCount(15)
+                    .WithWarmupCount(1)
+                    .WithIterationCount(3)
                     .WithId(".NET 4.8"));
 
                 AddJob(Job.Default.WithRuntime(CoreRuntime.Core80)
-                    .WithWarmupCount(3)
-                    .WithIterationCount(15)
+                    .WithWarmupCount(1)
+                    .WithIterationCount(3)
                     .WithId(".NET 8.0"));
             }
         }
@@ -51,7 +53,10 @@ namespace TypeLogic.LiskovWingSubstitution.Benchmarks
         private static readonly Type StringArray = typeof(string[]);
         private static readonly Type GenericList = typeof(List<>);
         private static readonly Type GenericIEnumerable = typeof(IEnumerable<>);
-        
+        private static readonly Type DateTimeRange = typeof(DateTimeRange);
+        private static readonly Type RangeOfDateTime = typeof(Range<DateTime>);
+        private static readonly Type GenericIComparable = typeof(IComparable<>);
+
         // Instance test data
         private List<string> listInstance;
         private string[] arrayInstance;
@@ -64,18 +69,27 @@ namespace TypeLogic.LiskovWingSubstitution.Benchmarks
         {
             // Direct interface implementation (fast path)
             yield return new TypePair(ListString, IEnumerableString, "List<string> -> IEnumerable<string>");
-            
+
+            // Direct interface implementation (fast path)
+            yield return new TypePair(DateTimeRange, RangeOfDateTime, "DateTimeRange -> Range<DateTime>");
+
             // Covariant interface conversion
             yield return new TypePair(ListString, IEnumerableObject, "List<string> -> IEnumerable<object>");
-            
+
+            // Covariant to closed type (complex case)
+            yield return new TypePair(GenericList, IEnumerableString, "List<string> -> IEnumerable<>");
+
             // Array to interface (special case)
             yield return new TypePair(StringArray, IEnumerableObject, "string[] -> IEnumerable<object>");
             
             // Generic definition to closed type (complex case)
             yield return new TypePair(GenericList, IEnumerableString, "List<> -> IEnumerable<string>");
-            
+
             // Generic to generic (complex case)
             yield return new TypePair(GenericList, GenericIEnumerable, "List<> -> IEnumerable<>");
+
+            // Covariant to generic (complex case)
+            yield return new TypePair(DateTimeRange, GenericIComparable, "DateTimeRange -> IComparable<>");
         }
 
         [GlobalSetup]

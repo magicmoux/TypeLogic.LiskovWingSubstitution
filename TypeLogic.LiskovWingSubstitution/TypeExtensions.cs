@@ -11,12 +11,44 @@ namespace TypeLogic.LiskovWingSubstitutions
     /// </summary>
     public static class TypeExtensions
     {
+        /// <summary>
+        /// Cache of previously computed conversion results between a source and a target type.
+        /// The key is a <see cref="VariantTypePair"/> and the value is a <see cref="ConversionInfo"/> describing
+        /// whether conversion is possible and, when positive, the resolved runtime type to use for substitution.
+        /// </summary>
         internal static readonly ConcurrentDictionary<VariantTypePair, ConversionInfo> _conversionCache = new ConcurrentDictionary<VariantTypePair, ConversionInfo>();
 
-        // Added for benchmarking purposes
+        // Reflection caches to avoid repeated reflection work
+        private static readonly ConcurrentDictionary<Type, Type> _genericDefCache = new ConcurrentDictionary<Type, Type>();
+        private static readonly ConcurrentDictionary<Type, Type[]> _genericArgsCache = new ConcurrentDictionary<Type, Type[]>();
+        private static readonly ConcurrentDictionary<Type, Type[]> _interfacesCache = new ConcurrentDictionary<Type, Type[]>();
+
+        // Cache to avoid scanning interfaces repeatedly: maps (type, genericDefinition) -> implemented interface type or negative sentinel
+        private static readonly ConcurrentDictionary<VariantTypePair, Type> _implementedGenericInterfaceCache = new ConcurrentDictionary<VariantTypePair, Type>();
+        // Negative sentinel to mark absence in cache (cannot store null in ConcurrentDictionary values)
+        private static readonly Type _negativeSentinel = typeof(TypeExtensions);
+
+        // Cache for results of SatisfiesTypeConstraints to avoid recomputation on recursive calls
+        private static readonly ConcurrentDictionary<VariantTypePair, Type> _satisfiesConstraintsCache = new ConcurrentDictionary<VariantTypePair, Type>();
+        // Cache for generic parameter constraints arrays
+        private static readonly ConcurrentDictionary<Type, Type[]> _genericParamConstraintsCache = new ConcurrentDictionary<Type, Type[]>();
+
+        /// <summary>
+        /// Clears the internal conversion and reflection caches used by <see cref="IsVariantOf(Type, Type, out Type)"/>.
+        /// </summary>
+        /// <remarks>
+        /// Intended for testing and benchmarking to force uncached execution paths. Clearing the cache is thread-safe
+        /// but will cause subsequent calls to re-evaluate type relationships.
+        /// </remarks>
         public static void ClearCache()
         {
             _conversionCache.Clear();
+            _genericDefCache.Clear();
+            _genericArgsCache.Clear();
+            _interfacesCache.Clear();
+            _implementedGenericInterfaceCache.Clear();
+            _satisfiesConstraintsCache.Clear();
+            _genericParamConstraintsCache.Clear();
         }
 
 #if NET45_OR_GREATER || NETSTANDARD2_0
@@ -109,47 +141,112 @@ namespace TypeLogic.LiskovWingSubstitutions
             }
 
             // At this point we should safely assume we deal with generic types only
-            var expectedTypeGenericDefinition = expectedType.IsGenericType ? expectedType.GetGenericTypeDefinition() : null;
-            var expectedTypeArguments = expectedType.GetGenericArguments();
+            var expectedTypeGenericDefinition = GetGenericDefinitionCached(expectedType);
+            var expectedTypeArguments = GetGenericArgumentsCached(expectedType);
+            int expectedArgCount = expectedTypeArguments.Length;
+
             if (!expectedType.IsInterface)
             {
-                do
+                // walk base types without LINQ, cache generic definition checks
+                var current = type;
+                while (current != null)
                 {
-                    if (type.IsGenericType)
+                    if (current.IsGenericType)
                     {
-                        var genericTypeDefinition = type.GetGenericTypeDefinition();
+                        var genericTypeDefinition = GetGenericDefinitionCached(current);
                         if (genericTypeDefinition == expectedTypeGenericDefinition)
                         {
-                            var info = _conversionCache.GetOrAdd(cacheKey, k => ConversionInfo.Register(k, type));
+                            var info = _conversionCache.GetOrAdd(cacheKey, k => ConversionInfo.Register(k, current));
                             runtimeType = info.RuntimeType;
                             return true;
                         }
                     }
-                    type = type.BaseType;
-                } while (type != null);
+                    current = current.BaseType;
+                }
             }
             else
             {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == expectedTypeGenericDefinition && SatisfiesTypeConstraints(type, expectedType, out runtimeType))
+                // If the type itself is a generic implementation of the expected generic interface
+                if (type.IsGenericType)
                 {
-                    _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
-                    return true;
+                    var typeGenDef = GetGenericDefinitionCached(type);
+                    if (typeGenDef == expectedTypeGenericDefinition && SatisfiesTypeConstraints(type, expectedType, out runtimeType))
+                    {
+                        _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
+                        return true;
+                    }
                 }
-                var potentialMatches = type.GetInterfaces()
-                    .Where(iface => iface.IsGenericType
-                        && expectedTypeGenericDefinition == iface.GetGenericTypeDefinition()
-                        && iface.GetGenericArguments().Count() == expectedTypeArguments.Count());
-                foreach (var iface in potentialMatches)
+
+                // Use cache-backed lookup to avoid scanning all interfaces repeatedly
+                Type implemented = GetImplementedGenericInterface(type, expectedTypeGenericDefinition, expectedArgCount);
+                if (implemented != null)
                 {
-                    if (iface.GetGenericTypeDefinition().IsVariantOf(expectedTypeGenericDefinition) && SatisfiesTypeConstraints(iface, expectedType, out runtimeType))
+                    if (SatisfiesTypeConstraints(implemented, expectedType, out runtimeType))
                     {
                         _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
                         return true;
                     }
                 }
             }
+
             _conversionCache.TryAdd(cacheKey, ConversionInfo.Negative);
             return false;
+        }
+
+        private static Type GetGenericDefinitionCached(Type t)
+        {
+            return _genericDefCache.GetOrAdd(t, key => key.IsGenericType ? key.GetGenericTypeDefinition() : null);
+        }
+
+        private static Type[] GetGenericArgumentsCached(Type t)
+        {
+            return _genericArgsCache.GetOrAdd(t, key => key.GetGenericArguments());
+        }
+
+        private static Type[] GetInterfacesCached(Type t)
+        {
+            return _interfacesCache.GetOrAdd(t, key => key.GetInterfaces());
+        }
+
+        /// <summary>
+        /// Looks up (and caches) the interface implemented by <paramref name="type"/> that has the generic definition <paramref name="expectedGenericDefinition"/>.
+        /// Returns null if no such interface is implemented by <paramref name="type"/>.
+        /// </summary>
+        private static Type GetImplementedGenericInterface(Type type, Type expectedGenericDefinition, int expectedArgCount)
+        {
+            if (expectedGenericDefinition == null) return null;
+            var key = new VariantTypePair(type, expectedGenericDefinition);
+            if (_implementedGenericInterfaceCache.TryGetValue(key, out var cached))
+            {
+                return cached == _negativeSentinel ? null : cached;
+            }
+
+            // Check if the type itself matches
+            if (type.IsGenericType)
+            {
+                var def = GetGenericDefinitionCached(type);
+                if (def == expectedGenericDefinition && GetGenericArgumentsCached(type).Length == expectedArgCount)
+                {
+                    _implementedGenericInterfaceCache.TryAdd(key, type);
+                    return type;
+                }
+            }
+
+            var interfaces = GetInterfacesCached(type);
+            for (int i = 0; i < interfaces.Length; i++)
+            {
+                var iface = interfaces[i];
+                if (!iface.IsGenericType) continue;
+                var ifaceGenDef = GetGenericDefinitionCached(iface);
+                if (ifaceGenDef != expectedGenericDefinition) continue;
+                if (GetGenericArgumentsCached(iface).Length != expectedArgCount) continue;
+
+                _implementedGenericInterfaceCache.TryAdd(key, iface);
+                return iface;
+            }
+
+            _implementedGenericInterfaceCache.TryAdd(key, _negativeSentinel);
+            return null;
         }
 
         /// <summary>
@@ -169,32 +266,61 @@ namespace TypeLogic.LiskovWingSubstitutions
         {
             constrainedType = null;
 
-            Type[] genericTypeArguments = type.GetGenericArguments();
-            Type[] expectedTypeArguments = expectedType.GetGenericArguments();
+            var cacheKey = new VariantTypePair(type, expectedType);
+            if (_satisfiesConstraintsCache.TryGetValue(cacheKey, out var cachedResult))
+            {
+                if (cachedResult == _negativeSentinel)
+                {
+                    constrainedType = null;
+                    return false;
+                }
+                constrainedType = cachedResult;
+                return true;
+            }
+
+            Type[] genericTypeArguments = GetGenericArgumentsCached(type);
+            Type[] expectedTypeArguments = GetGenericArgumentsCached(expectedType);
 
             //obvious cases
-            if (genericTypeArguments.Count() != expectedTypeArguments.Count()) return false;
-
-            var substitutedArgs = new List<Type>();
-            for (int i = 0, l = genericTypeArguments.Count(); i < l; i++)
+            if (genericTypeArguments.Length != expectedTypeArguments.Length)
             {
-                var typeArg = genericTypeArguments.ElementAt(i);
-                var expectedTypeArg = expectedTypeArguments.ElementAt(i);
+                _satisfiesConstraintsCache.TryAdd(cacheKey, _negativeSentinel);
+                return false;
+            }
+
+            int l = genericTypeArguments.Length;
+            var substitutedArgs = new Type[l];
+            for (int i = 0; i < l; i++)
+            {
+                var typeArg = genericTypeArguments[i];
+                var expectedTypeArg = expectedTypeArguments[i];
+
                 if (!expectedTypeArg.IsGenericParameter)
                 {
-                    if (!typeArg.IsVariantOf(expectedTypeArg, out var substitutedArg)) return false;
-                    substitutedArgs.Add(substitutedArg);
-                }
-                else if (expectedTypeArg.IsGenericParameter)
-                {
-                    foreach (var typeContraint in expectedTypeArg.GetGenericParameterConstraints())
+                    if (!typeArg.IsVariantOf(expectedTypeArg, out var substitutedArg))
                     {
-                        if (!typeArg.IsVariantOf(typeContraint, out var substitutedArg)) return false;
+                        _satisfiesConstraintsCache.TryAdd(cacheKey, _negativeSentinel);
+                        return false;
                     }
-                    substitutedArgs.Add(typeArg);
+                    substitutedArgs[i] = substitutedArg;
+                }
+                else
+                {
+                    var constraints = _genericParamConstraintsCache.GetOrAdd(expectedTypeArg, key => key.GetGenericParameterConstraints());
+                    for (int c = 0; c < constraints.Length; c++)
+                    {
+                        if (!typeArg.IsVariantOf(constraints[c], out var _))
+                        {
+                            _satisfiesConstraintsCache.TryAdd(cacheKey, _negativeSentinel);
+                            return false;
+                        }
+                    }
+                    substitutedArgs[i] = typeArg;
                 }
             }
-            constrainedType = expectedType.GetGenericTypeDefinition().MakeGenericType(substitutedArgs.ToArray());
+
+            constrainedType = GetGenericDefinitionCached(expectedType).MakeGenericType(substitutedArgs);
+            _satisfiesConstraintsCache.TryAdd(cacheKey, constrainedType);
             return true;
         }
     }

@@ -6,9 +6,9 @@
     <AssemblyName>TypeLogic.LiskovWingSubstitution</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     
-    <!-- Assembly Signing -->
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SolutionDir)TypeLogic.LiskovWingSubstitution.snk</AssemblyOriginatorKeyFile>
+    <!-- Assembly Signing (disabled for local builds where snk is not available) -->
+    <SignAssembly>false</SignAssembly>
+    <!-- <AssemblyOriginatorKeyFile>$(SolutionDir)TypeLogic.LiskovWingSubstitution.snk</AssemblyOriginatorKeyFile> -->
     <DelaySign>false</DelaySign>
     
     <!-- NuGet Package Info -->

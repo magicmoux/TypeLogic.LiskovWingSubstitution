@@ -10,7 +10,7 @@ A .NET library implementing the Liskov/Wing Substitution Principle for type vari
 
 This project emerged from previous R&D tests dealing with .NET generics: I needed an additional simple way to verify type variance against GenericTypeDefinition, complementing .NET's built-in type system capabilities.
 
-What started as a proof-of-concept to simplify variance checking turned into a full-fledged library that extends .NET's type system that you may find educational or even practicalin some cases. The implementation is based from Barbara Liskov's and Jeannette Wing's work on behavioral subtyping, providing additional variance checking capabilities when working with GenericTypeDefinitions (especially in cases where non-generic Type inheritance is absent, as illustrated in the examples).
+What started as an experiment  to simplify variance checking turned into a full-fledged library that extends .NET's type system that you may find educational or even practical in some cases. The implementation is based from Barbara Liskov's and Jeannette Wing's work on behavioral subtyping, providing additional variance checking capabilities when working with GenericTypeDefinitions (especially in cases where non-generic Type inheritance is absent, as illustrated in the examples).
 
 ## Features
 
@@ -120,16 +120,33 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Performance
 
-The library includes comprehensive benchmarks to measure performance across different scenarios:
+The library includes comprehensive benchmarks to measure performance across different scenarios. Below are short-run results produced locally (reduced iterations for quicker runs). These numbers are illustrative and will vary by machine, runtime and configuration; run the benchmarks locally with the provided Benchmark project for full, reproducible results.
 
-- Type variance checking with and without caching
-- Instance-based variance checking
-- Generic type definition handling
-- Type constraint validation
+Benchmark configuration used for this run:
+- Release configuration
+- Reduced warmup/iteration counts for quick local runs
+- Frameworks: .NET Framework 4.6.2, 4.7, 4.8 and .NET 8.0
 
-To run the benchmarks:
+Summary (mean times)
 
-```shell
+| Scenario / Framework | .NET 4.6.2 | .NET 4.7 | .NET 4.8 | .NET 8.0 |
+|---|---:|---:|---:|---:|
+| Uncached IsVariantOf | ~1,298 ns | ~1,240 ns | ~1,268 ns | ~781 ns |
+| Cached IsVariantOf | ~42 ns | ~42 ns | ~44 ns | ~13 ns |
+| List instance IsInstanceOf | ~48 ns | ~48 ns | ~48 ns | ~12 ns |
+| Array instance IsInstanceOf | ~62 ns | ~62 ns | ~61 ns | ~12 ns |
+
+Allocations per operation (approx)
+- Uncached IsVariantOf: ~784–2985 B (depends on scenario/framework)
+- Cached / Instance checks: ~24 B (mostly negligible)
+
+Notes
+- The uncached code path involves reflective scanning and generic-constraint checking; caching dramatically reduces both latency and allocations.
+- These short-run numbers were produced with the benchmarks configured for fast execution; for reliable/production-grade metrics run the Benchmark project with the default BenchmarkDotNet configuration (more iterations and longer warmup).
+
+To reproduce the full benchmarks:
+
+```bash
 dotnet run -c Release --project TypeLogic.LiskovWingSubstitution.Benchmarks
 ```
 

@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TypeLogic.LiskovWingSubstitution.Tests\TypeLogic.LiskovWingSubstitution.Tests.csproj" />
     <ProjectReference Include="..\TypeLogic.LiskovWingSubstitution\TypeLogic.LiskovWingSubstitution.csproj" />
   </ItemGroup>
 
