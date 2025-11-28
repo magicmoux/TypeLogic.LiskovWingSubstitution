@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<doc>
+  <assembly>
+    <name>TypeLogic.LiskovWingSubstitution</name>
+  </assembly>
+  <members>
+    <member name="T:TypeLogic.LiskovWingSubstitutions.AssemblyDocumentation">
+      <summary>Assembly-level documentation for the TypeLogic.LiskovWingSubstitution library.</summary>
+      <remarks>
+        This assembly implements helpers to determine whether a runtime type can be used in place of another type
+        according to the Liskov/Wing Substitution Principle.
+
+        IMPORTANT: Throughout this documentation the term "subtype" (and related API names such as
+        "IsVariantOf", "IsSubtypeOf", "IsInstanceOf") is used in the stronger, behavioral sense defined by
+        Liskov and Wing — i.e. a type S is a subtype of type T only if S can be used wherever T is expected
+        without altering desirable program properties. This is NOT merely syntactic (name-based) or structural
+        subtyping (shape/members) nor simply assignability by the CLR; the checks performed by this library take
+        into account generic variance, generic parameter constraints and behavioral substitutability.
+      </remarks>
+    </member>
+
+    <member name="T:TypeLogic.LiskovWingSubstitutions.TypeExtensions">
+      <summary>Provides extension methods to determine whether a type can be used in place of another according to the Liskov/Wing Substitution Principle.</summary>
+      <remarks>See assembly-level documentation for the clarification of "subtype" semantics used by these APIs.</remarks>
+    </member>
+
+    <member name="M:TypeLogic.LiskovWingSubstitutions.TypeExtensions.IsVariantOf(System.Type,System.Type)">
+      <summary>Determines whether the source type can be considered a Liskov/Wing-style subtype of the target type.</summary>
+      <param name="type">Source type to check.</param>
+      <param name="expectedType">Target type to check substitutability against.</param>
+      <returns>True if the source type is considered a behavioral subtype of the target type; otherwise false.</returns>
+    </member>
+
+    <member name="M:TypeLogic.LiskovWingSubstitutions.TypeExtensions.IsVariantOf(System.Type,System.Type,System.Type@)">
+      <summary>Determines whether the source type can be considered a Liskov/Wing-style subtype of the target type, and returns the runtime type that satisfies the substitutability check when available.</summary>
+      <param name="type">Source type to check.</param>
+      <param name="expectedType">Target type to check substitutability against.</param>
+      <param name="runtimeType">When this method returns, contains the runtime type that can be used to satisfy expected type, or null if not applicable.</param>
+      <returns>True if the source type is considered a behavioral subtype of the target type; otherwise false.</returns>
+    </member>
+
+    <member name="T:TypeLogic.LiskovWingSubstitutions.ConversionExtensions">
+      <summary>Instance conversion helpers built on top of the subtype/variance checks.</summary>
+      <remarks>These helpers attempt to convert instances to the runtime substitution type discovered by the algorithm. They respect the Liskov/Wing interpretation of subtype used by the library.</remarks>
+    </member>
+
+    <member name="M:TypeLogic.LiskovWingSubstitutions.ConversionExtensions.ConvertAs``1(System.Object,System.Type)">
+      <summary>Attempts to convert the instance to an object that satisfies <paramref name="expectedType"/> according to the library's substitution rules.</summary>
+      <param name="instance">Instance to convert.</param>
+      <param name="expectedType">Target type to convert to (may be a generic definition).</param>
+      <returns>A converted instance if conversion is possible; otherwise null.</returns>
+    </member>
+
+    <member name="T:TypeLogic.LiskovWingSubstitutions.ConversionInfo">
+      <summary>Internal type describing a discovered conversion and a lazily-built converter delegate.</summary>
+      <remarks>Used internally by caching and conversion helpers. The documented "runtime type" stored here is the closed generic or constructed runtime type used for substitutability checks.</remarks>
+    </member>
+
+  </members>
+</doc>

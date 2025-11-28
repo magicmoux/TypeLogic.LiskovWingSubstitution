@@ -7,6 +7,15 @@ using System.Runtime.CompilerServices;
 
 namespace TypeLogic.LiskovWingSubstitutions
 {
+    /// <summary>
+    /// Provides extension methods to determine whether a type can be used in place of another
+    /// according to the Liskov/Wing Substitution Principle.
+    /// </summary>
+    /// <remarks>
+    /// IMPORTANT: In this API, the term "subtype" (and methods named `IsVariantOf` or `IsSubtypeOf`)
+    /// refers to the stronger behavioral definition from Liskov/Wing (considering generic variance,
+    /// constraints and runtime substitutability), not merely syntactic or structural subtyping.
+    /// </remarks>
     public static class TypeExtensions
     {
         internal struct HandlePair : IEquatable<HandlePair>
@@ -60,22 +69,50 @@ namespace TypeLogic.LiskovWingSubstitutions
         }
 
 #if NET45_OR_GREATER || NETSTANDARD2_0
+        /// <summary>
+        /// Determines whether <paramref name="type"/> can be considered a subtype of <paramref name="expectedType"/>.
+        /// </summary>
+        /// <param name="type">Source type to check.</param>
+        /// <param name="expectedType">Target type to check substitutability against.</param>
+        /// <returns>True if <paramref name="type"/> is considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>; otherwise false.</returns>
         public static bool IsVariantOf(this TypeInfo type, Type expectedType)
         {
             return IsVariantOf(type.AsType(), expectedType, out var substitutionType);
         }
 
-        public static bool IsVariantOf(this TypeInfo type, Type expectedType, out Type substitutionType)
+        /// <summary>
+        /// Determines whether <paramref name="type"/> can be considered a subtype of <paramref name="expectedType"/>,
+        /// and returns the runtime type that satisfies the substitutability check when available.
+        /// </summary>
+        /// <param name="type">Source type to check.</param>
+        /// <param name="expectedType">Target type to check substitutability against.</param>
+        /// <param name="runtimeType">When this method returns, contains the runtime type that can be used to satisfy <paramref name="expectedType"/>, or null if not applicable.</param>
+        /// <returns>True if <paramref name="type"/> is considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>; otherwise false.</returns>
+        public static bool IsVariantOf(this TypeInfo type, Type expectedType, out Type runtimeType)
         {
-            return IsVariantOf(type.AsType(), expectedType, out substitutionType);
+            return IsVariantOf(type.AsType(), expectedType, out runtimeType);
         }
 #endif
 
+        /// <summary>
+        /// Determines whether <paramref name="type"/> can be considered a subtype of <paramref name="expectedType"/>.
+        /// </summary>
+        /// <param name="type">Source type to check.</param>
+        /// <param name="expectedType">Target type to check substitutability against.</param>
+        /// <returns>True if <paramref name="type"/> is considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>; otherwise false.</returns>
         public static bool IsVariantOf(this Type type, Type expectedType)
         {
             return IsVariantOf(type, expectedType, out var substitutionType);
         }
 
+        /// <summary>
+        /// Determines whether <paramref name="type"/> can be considered a subtype of <paramref name="expectedType"/>,
+        /// and returns the runtime type that satisfies the substitutability check when available.
+        /// </summary>
+        /// <param name="type">Source type to check.</param>
+        /// <param name="expectedType">Target type to check substitutability against.</param>
+        /// <param name="runtimeType">When this method returns, contains the runtime type that can be used to satisfy <paramref name="expectedType"/>, or null if not applicable.</param>
+        /// <returns>True if <paramref name="type"/> is considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>; otherwise false.</returns>
         public static bool IsVariantOf(this Type type, Type expectedType, out Type runtimeType)
         {
             runtimeType = null;
@@ -381,7 +418,7 @@ namespace TypeLogic.LiskovWingSubstitutions
             if (defA == defB) return true;
             var key = new HandlePair(defA.TypeHandle, defB.TypeHandle);
             if (_genericDefVarianceCache.TryGetValue(key, out var cached)) return cached;
-            var result = defA.IsVariantOf(defB);
+            var result = defA.IsSubtypeOf(defB);
             _genericDefVarianceCache.TryAdd(key, result);
             return result;
         }

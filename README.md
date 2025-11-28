@@ -37,10 +37,10 @@ dotnet add package TypeLogic.LiskovWingSubstitution
 using TypeLogic.LiskovWingSubstitutions;
 
 // Check if List<string> is variant of IEnumerable<object>
-bool isVariant = typeof(List<string>).IsVariantOf(typeof(IEnumerable<object>));
+bool isVariant = typeof(List<string>).IsSubtypeOf(typeof(IEnumerable<object>));
 
 // Check with runtime type information
-bool isVariantWithType = typeof(List<string>).IsVariantOf(typeof(IEnumerable<object>), out Type runtimeType);
+bool isVariantWithType = typeof(List<string>).IsSubtypeOf(typeof(IEnumerable<object>), out Type runtimeType);
 ```
 
 ### Instance-Based Variance Checking
@@ -71,7 +71,7 @@ bool isInstanceOfType = instance.IsInstanceOf(typeof(IEquatable<>), out var runt
 using TypeLogic.LiskovWingSubstitutions;
 
 // Check if List<T> is variant of IEnumerable<>
-bool isGenericVariant = typeof(List<int>).IsVariantOf(typeof(IEnumerable<>));
+bool isGenericVariant = typeof(List<int>).IsSubtypeOf(typeof(IEnumerable<>));
 
 // Convert instance based on generic definition
 string instance = "test";
@@ -124,13 +124,13 @@ Short-run benchmark results (current run) vs initial baseline in `benchmarks-ref
 
 | Scenario / Framework | Baseline (ns) | Current (ns) | Delta |
 |---|---:|---:|---:|
-| Uncached IsVariantOf - .NET 4.6.2 | 1396.541 | 1892.235 | -35.5% (regression) |
-| Uncached IsVariantOf - .NET 4.7   | 1299.461 | 1909.931 | -47.0% (regression) |
-| Uncached IsVariantOf - .NET 4.8   | 1313.819 | 1957.479 | -49.0% (regression) |
-| Uncached IsVariantOf - .NET 8.0   | 865.385  | 1287.775 | -48.8% (regression) |
-| Cached IsVariantOf - .NET 4.7     | 40.293   | 36.782  | +8.7% improvement |
-| Cached IsVariantOf - .NET 4.8     | 40.438   | 35.957  | +11.2% improvement |
-| Cached IsVariantOf - .NET 8.0     | 12.268   | 7.813   | +36.3% improvement |
+| Uncached IsSubtypeOf - .NET 4.6.2 | 1396.541 | 1892.235 | -35.5% (regression) |
+| Uncached IsSubtypeOf - .NET 4.7   | 1299.461 | 1909.931 | -47.0% (regression) |
+| Uncached IsSubtypeOf - .NET 4.8   | 1313.819 | 1957.479 | -49.0% (regression) |
+| Uncached IsSubtypeOf - .NET 8.0   | 865.385  | 1287.775 | -48.8% (regression) |
+| Cached IsSubtypeOf - .NET 4.7     | 40.293   | 36.782  | +8.7% improvement |
+| Cached IsSubtypeOf - .NET 4.8     | 40.438   | 35.957  | +11.2% improvement |
+| Cached IsSubtypeOf - .NET 8.0     | 12.268   | 7.813   | +36.3% improvement |
 
 Notes
 - These are short-run, locally produced numbers. Use full BenchmarkDotNet runs for stable results.

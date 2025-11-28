@@ -17,7 +17,7 @@ namespace TypeLogic.LiskovWingSubstitution.Benchmarks
                          .WithOption(ConfigOptions.DisableOptimizationsValidator, true);
 #endif
 
-            BenchmarkRunner.Run<IsVariantOfBenchmark>(config, args);
+            BenchmarkRunner.Run<IsSubtypeOfBenchmark>(config, args);
         }
     }
 }

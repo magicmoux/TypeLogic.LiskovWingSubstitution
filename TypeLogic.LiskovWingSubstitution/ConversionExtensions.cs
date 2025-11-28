@@ -51,7 +51,7 @@ namespace TypeLogic.LiskovWingSubstitutions
             }
 
             // Check if conversion is possible and get the runtime type
-            if (actualType.IsVariantOf(targetType, out var runtimeType))
+            if (actualType.IsSubtypeOf(targetType, out var runtimeType))
             {
                 try
                 {
@@ -89,20 +89,20 @@ namespace TypeLogic.LiskovWingSubstitutions
 
         public static bool IsInstanceOf<T, TOut>(this T instance)
         {
-            if (instance == null) return typeof(T).IsVariantOf(typeof(TOut));
-            return instance.GetType().IsVariantOf(typeof(TOut));
+            if (instance == null) return typeof(T).IsSubtypeOf(typeof(TOut));
+            return instance.GetType().IsSubtypeOf(typeof(TOut));
         }
 
         public static bool IsInstanceOf<T>(this T instance, Type targetType)
         {
-            if (instance == null) return typeof(T).IsVariantOf(targetType);
-            return instance.GetType().IsVariantOf(targetType);
+            if (instance == null) return typeof(T).IsSubtypeOf(targetType);
+            return instance.GetType().IsSubtypeOf(targetType);
         }
 
         public static bool IsInstanceOf<T>(this T instance, Type targetType, out Type runtimeType)
         {
-            if (instance == null) return typeof(T).IsVariantOf(targetType, out runtimeType);
-            return instance.GetType().IsVariantOf(targetType, out runtimeType);
+            if (instance == null) return typeof(T).IsSubtypeOf(targetType, out runtimeType);
+            return instance.GetType().IsSubtypeOf(targetType, out runtimeType);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace TypeLogic.LiskovWingSubstitution.Benchmarks
     [MemoryDiagnoser]
     [Orderer(SummaryOrderPolicy.FastestToSlowest)]
     [Config(typeof(Config))]
-    public class IsVariantOfBenchmark
+    public class IsSubtypeOfBenchmark
     {
         private class Config : ManualConfig
         {
@@ -101,8 +101,8 @@ namespace TypeLogic.LiskovWingSubstitution.Benchmarks
             enumerableInstance = listInstance;
 
             // Warm up type cache with some unrelated types to simulate real-world scenario
-            typeof(Dictionary<,>).IsVariantOf(typeof(IEnumerable<>));
-            typeof(List<int>).IsVariantOf(typeof(IEnumerable<int>));
+            typeof(Dictionary<,>).IsSubtypeOf(typeof(IEnumerable<>));
+            typeof(List<int>).IsSubtypeOf(typeof(IEnumerable<int>));
         }
 
         [GlobalCleanup]
@@ -114,15 +114,15 @@ namespace TypeLogic.LiskovWingSubstitution.Benchmarks
 
         [Benchmark(Baseline = true, Description = "Uncached")]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public bool IsVariantOfUncached()
+        public bool IsSubtypeOfUncached()
         {
             TypeExtensions.ClearCache(); // Force uncached path
-            return Types.Source.IsVariantOf(Types.Target);
+            return Types.Source.IsSubtypeOf(Types.Target);
         }
 
         [Benchmark(Description = "Cached")]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public bool IsVariantOfCached() => Types.Source.IsVariantOf(Types.Target);
+        public bool IsSubtypeOfCached() => Types.Source.IsSubtypeOf(Types.Target);
 
         [Benchmark(Description = "List Instance")]
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -139,7 +139,7 @@ namespace TypeLogic.LiskovWingSubstitution.Benchmarks
         {
             // Test reflection caching behavior in .NET Framework
             return Types.Source.GetInterfaces().Length > 0 && 
-                   Types.Source.IsVariantOf(Types.Target);
+                   Types.Source.IsSubtypeOf(Types.Target);
         }
 #endif
     }
