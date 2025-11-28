@@ -7,9 +7,6 @@ using System.Runtime.CompilerServices;
 
 namespace TypeLogic.LiskovWingSubstitutions
 {
-    /// <summary>
-    /// Provides extension methods to check type variance relationships according to the Liskov/Wing Substitution Principle.
-    /// </summary>
     public static class TypeExtensions
     {
         internal struct HandlePair : IEquatable<HandlePair>
@@ -22,49 +19,32 @@ namespace TypeLogic.LiskovWingSubstitutions
             public override int GetHashCode() => A.GetHashCode() * 397 ^ B.GetHashCode();
         }
 
-        /// <summary>
-        /// Cache of previously computed conversion results between a source and a target type.
-        /// The key is a <see cref="VariantTypePair"/> and the value is a <see cref="ConversionInfo"/> describing
-        /// whether conversion is possible and, when positive, the resolved runtime type to use for substitution.
-        /// </summary>
         internal static readonly ConcurrentDictionary<VariantTypePair, ConversionInfo> _conversionCache = new ConcurrentDictionary<VariantTypePair, ConversionInfo>();
+        private static readonly ConcurrentDictionary<HandlePair, ConversionInfo> _conversionCacheHandles = new ConcurrentDictionary<HandlePair, ConversionInfo>();
 
-        // Reflection caches to avoid repeated reflection work
         private static readonly ConcurrentDictionary<Type, Type> _genericDefCache = new ConcurrentDictionary<Type, Type>();
         private static readonly ConcurrentDictionary<Type, Type[]> _genericArgsCache = new ConcurrentDictionary<Type, Type[]>();
         private static readonly ConcurrentDictionary<Type, Type[]> _interfacesCache = new ConcurrentDictionary<Type, Type[]>();
 
-        // Precomputed base generic definitions for a type (excluding nulls)
         private static readonly ConcurrentDictionary<Type, Type[]> _baseGenericDefsCache = new ConcurrentDictionary<Type, Type[]>();
-        // Interface grouping cache: Type -> (genericDef -> List of closed interface types)
         private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, Type[]>> _interfaceMapCache = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, Type[]>>();
 
-        // Cache to avoid scanning interfaces repeatedly: maps (typeHandle, genericDefinitionHandle) -> implemented interface type or negative sentinel
         private static readonly ConcurrentDictionary<HandlePair, Type> _implementedGenericInterfaceCache = new ConcurrentDictionary<HandlePair, Type>();
-        // Negative sentinel to mark absence in cache (cannot store null in ConcurrentDictionary values)
         private static readonly Type _negativeSentinel = typeof(TypeExtensions);
 
-        // Cache for results of SatisfiesTypeConstraints to avoid recomputation on recursive calls (keyed by handles)
         private static readonly ConcurrentDictionary<HandlePair, Type> _satisfiesConstraintsCache = new ConcurrentDictionary<HandlePair, Type>();
-        // Cache for generic parameter constraints arrays
         private static readonly ConcurrentDictionary<Type, Type[]> _genericParamConstraintsCache = new ConcurrentDictionary<Type, Type[]>();
 
-        // Cache for generic-definition variance checks (pair of generic definitions) keyed by handles
         private static readonly ConcurrentDictionary<HandlePair, bool> _genericDefVarianceCache = new ConcurrentDictionary<HandlePair, bool>();
-
-        // In-progress marker to prevent re-entrant/exponential recursion
         private static readonly ConcurrentDictionary<VariantTypePair, byte> _inProgress = new ConcurrentDictionary<VariantTypePair, byte>();
 
-        /// <summary>
-        /// Clears the internal conversion and reflection caches used by <see cref="IsVariantOf(Type, Type, out Type)"/>.
-        /// </summary>
-        /// <remarks>
-        /// Intended for testing and benchmarking to force uncached execution paths. Clearing the cache is thread-safe
-        /// but will cause subsequent calls to re-evaluate type relationships.
-        /// </remarks>
+        [ThreadStatic] private static Type[] _tlsTempBuffer;
+        [ThreadStatic] private static int _tlsDepth;
+
         public static void ClearCache()
         {
             _conversionCache.Clear();
+            _conversionCacheHandles.Clear();
             _genericDefCache.Clear();
             _genericArgsCache.Clear();
             _interfacesCache.Clear();
@@ -75,6 +55,8 @@ namespace TypeLogic.LiskovWingSubstitutions
             _genericParamConstraintsCache.Clear();
             _genericDefVarianceCache.Clear();
             _inProgress.Clear();
+            _tlsTempBuffer = null;
+            _tlsDepth = 0;
         }
 
 #if NET45_OR_GREATER || NETSTANDARD2_0
@@ -97,40 +79,50 @@ namespace TypeLogic.LiskovWingSubstitutions
         public static bool IsVariantOf(this Type type, Type expectedType, out Type runtimeType)
         {
             runtimeType = null;
-
             if (type == null || expectedType == null) return false;
             if (type == expectedType)
             {
-                runtimeType = type;
-                return true;
+                runtimeType = type; return true;
             }
 
             var cacheKey = new VariantTypePair(type, expectedType);
+            var handleKey = new HandlePair(type.TypeHandle, expectedType.TypeHandle);
 
-            if (_conversionCache.TryGetValue(cacheKey, out var cached))
+            if (_conversionCacheHandles.TryGetValue(handleKey, out var cachedHandleEntry))
             {
-                if (!cached.IsConvertible) return false;
-                runtimeType = cached.RuntimeType;
+                if (!cachedHandleEntry.IsConvertible) return false;
+                runtimeType = cachedHandleEntry.RuntimeType; return true;
+            }
+
+            if (_conversionCache.TryGetValue(cacheKey, out var cachedLegacy))
+            {
+                if (!cachedLegacy.IsConvertible) return false;
+                runtimeType = cachedLegacy.RuntimeType;
+                _conversionCacheHandles.TryAdd(handleKey, cachedLegacy);
                 return true;
             }
 
             if (type.ContainsGenericParameters && !expectedType.ContainsGenericParameters)
             {
-                _conversionCache.TryAdd(cacheKey, ConversionInfo.Negative);
+                var neg = ConversionInfo.Negative;
+                _conversionCache.TryAdd(cacheKey, neg);
+                _conversionCacheHandles.TryAdd(handleKey, neg);
                 return false;
             }
 
             if (expectedType.IsAssignableFrom(type))
             {
-                var info = _conversionCache.GetOrAdd(cacheKey, k => ConversionInfo.Register(k, expectedType));
-                runtimeType = info.RuntimeType;
-                return true;
+                var info = ConversionInfo.Register(cacheKey, expectedType);
+                _conversionCache.TryAdd(cacheKey, info);
+                _conversionCacheHandles.TryAdd(handleKey, info);
+                runtimeType = info.RuntimeType; return true;
             }
 
-            // prevent re-entrant evaluation on the same pair
             if (!_inProgress.TryAdd(cacheKey, 0))
             {
-                _conversionCache.TryAdd(cacheKey, ConversionInfo.Negative);
+                var neg = ConversionInfo.Negative;
+                _conversionCache.TryAdd(cacheKey, neg);
+                _conversionCacheHandles.TryAdd(handleKey, neg);
                 return false;
             }
 
@@ -147,7 +139,9 @@ namespace TypeLogic.LiskovWingSubstitutions
                     if (elemType.IsVariantOf(expectedTypeArguments[0], out var substitutedArg))
                     {
                         runtimeType = typeof(IEnumerable<>).MakeGenericType(substitutedArg);
-                        _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
+                        var info = ConversionInfo.Register(cacheKey, runtimeType);
+                        _conversionCache.TryAdd(cacheKey, info);
+                        _conversionCacheHandles.TryAdd(handleKey, info);
                         return true;
                     }
                 }
@@ -157,7 +151,9 @@ namespace TypeLogic.LiskovWingSubstitutions
                     if (tArg == typeof(char))
                     {
                         runtimeType = typeof(IEnumerable<char>);
-                        _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
+                        var info = ConversionInfo.Register(cacheKey, runtimeType);
+                        _conversionCache.TryAdd(cacheKey, info);
+                        _conversionCacheHandles.TryAdd(handleKey, info);
                         return true;
                     }
                 }
@@ -169,9 +165,10 @@ namespace TypeLogic.LiskovWingSubstitutions
                     {
                         if (baseGens[i] == expectedTypeGenericDefinition)
                         {
-                            var info = _conversionCache.GetOrAdd(cacheKey, k => ConversionInfo.Register(k, type));
-                            runtimeType = info.RuntimeType;
-                            return true;
+                            var info = ConversionInfo.Register(cacheKey, type);
+                            _conversionCache.TryAdd(cacheKey, info);
+                            _conversionCacheHandles.TryAdd(handleKey, info);
+                            runtimeType = info.RuntimeType; return true;
                         }
                     }
                 }
@@ -180,10 +177,17 @@ namespace TypeLogic.LiskovWingSubstitutions
                     if (type.IsGenericType)
                     {
                         var typeGenDef = GetGenericDefinitionCached(type);
-                        if (typeGenDef == expectedTypeGenericDefinition && SatisfiesTypeConstraints(type, expectedType, out runtimeType))
+                        if (typeGenDef == expectedTypeGenericDefinition)
                         {
-                            _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
-                            return true;
+                            if (TryGetSatisfyingArguments(type, expectedType, out var args))
+                            {
+                                var constructed = GetGenericDefinitionCached(expectedType).MakeGenericType(args);
+                                _satisfiesConstraintsCache.TryAdd(new HandlePair(type.TypeHandle, expectedType.TypeHandle), constructed);
+                                var info = ConversionInfo.Register(cacheKey, constructed);
+                                _conversionCache.TryAdd(cacheKey, info);
+                                _conversionCacheHandles.TryAdd(handleKey, info);
+                                runtimeType = constructed; return true;
+                            }
                         }
                     }
 
@@ -191,20 +195,102 @@ namespace TypeLogic.LiskovWingSubstitutions
                     if (implemented != null)
                     {
                         var implGenDef = GetGenericDefinitionCached(implemented);
-                        if (IsGenericDefinitionVariantOf(implGenDef, expectedTypeGenericDefinition) && SatisfiesTypeConstraints(implemented, expectedType, out runtimeType))
+                        if (IsGenericDefinitionVariantOf(implGenDef, expectedTypeGenericDefinition))
                         {
-                            _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
-                            return true;
+                            if (TryGetSatisfyingArguments(implemented, expectedType, out var args))
+                            {
+                                var constructed = GetGenericDefinitionCached(expectedType).MakeGenericType(args);
+                                _satisfiesConstraintsCache.TryAdd(new HandlePair(implemented.TypeHandle, expectedType.TypeHandle), constructed);
+                                var info = ConversionInfo.Register(cacheKey, constructed);
+                                _conversionCache.TryAdd(cacheKey, info);
+                                _conversionCacheHandles.TryAdd(handleKey, info);
+                                runtimeType = constructed; return true;
+                            }
                         }
                     }
                 }
 
-                _conversionCache.TryAdd(cacheKey, ConversionInfo.Negative);
+                var negInfo = ConversionInfo.Negative;
+                _conversionCache.TryAdd(cacheKey, negInfo);
+                _conversionCacheHandles.TryAdd(handleKey, negInfo);
                 return false;
             }
             finally
             {
                 _inProgress.TryRemove(cacheKey, out var _);
+            }
+        }
+
+        private static bool TryGetSatisfyingArguments(Type type, Type expectedType, out Type[] substitutedArgs)
+        {
+            substitutedArgs = null;
+            var handleKey = new HandlePair(type.TypeHandle, expectedType.TypeHandle);
+            if (_satisfiesConstraintsCache.TryGetValue(handleKey, out var cached))
+            {
+                if (cached == _negativeSentinel) return false;
+                substitutedArgs = cached.GetGenericArguments();
+                return true;
+            }
+
+            Type[] genericTypeArguments = GetGenericArgumentsCached(type);
+            Type[] expectedTypeArguments = GetGenericArgumentsCached(expectedType);
+            if (genericTypeArguments.Length != expectedTypeArguments.Length)
+            {
+                _satisfiesConstraintsCache.TryAdd(handleKey, _negativeSentinel);
+                return false;
+            }
+
+            int l = genericTypeArguments.Length;
+            _tlsDepth++;
+            try
+            {
+                Type[] temp;
+                if (_tlsDepth == 1)
+                {
+                    if (_tlsTempBuffer == null || _tlsTempBuffer.Length < l) _tlsTempBuffer = new Type[l];
+                    temp = _tlsTempBuffer;
+                }
+                else
+                {
+                    temp = new Type[l];
+                }
+
+                for (int i = 0; i < l; i++)
+                {
+                    var typeArg = genericTypeArguments[i];
+                    var expectedTypeArg = expectedTypeArguments[i];
+
+                    if (!expectedTypeArg.IsGenericParameter)
+                    {
+                        if (!typeArg.IsVariantOf(expectedTypeArg, out var substitutedArg))
+                        {
+                            _satisfiesConstraintsCache.TryAdd(handleKey, _negativeSentinel);
+                            return false;
+                        }
+                        temp[i] = substitutedArg;
+                    }
+                    else
+                    {
+                        var constraints = _genericParamConstraintsCache.GetOrAdd(expectedTypeArg, key => key.GetGenericParameterConstraints());
+                        for (int c = 0; c < constraints.Length; c++)
+                        {
+                            if (!typeArg.IsVariantOf(constraints[c], out var _))
+                            {
+                                _satisfiesConstraintsCache.TryAdd(handleKey, _negativeSentinel);
+                                return false;
+                            }
+                        }
+                        temp[i] = typeArg;
+                    }
+                }
+
+                substitutedArgs = new Type[l];
+                Array.Copy(temp, substitutedArgs, l);
+                return true;
+            }
+            finally
+            {
+                _tlsDepth--;
             }
         }
 
@@ -264,7 +350,6 @@ namespace TypeLogic.LiskovWingSubstitutions
                 return cached == _negativeSentinel ? null : cached;
             }
 
-            // check the type itself
             if (type.IsGenericType)
             {
                 var def = GetGenericDefinitionCached(type);
@@ -321,9 +406,20 @@ namespace TypeLogic.LiskovWingSubstitutions
             }
 
             int l = genericTypeArguments.Length;
-            var rented = new Type[l];
+            _tlsDepth++;
+            Type[] rented = null;
             try
             {
+                if (_tlsDepth == 1)
+                {
+                    if (_tlsTempBuffer == null || _tlsTempBuffer.Length < l) _tlsTempBuffer = new Type[l];
+                    rented = _tlsTempBuffer;
+                }
+                else
+                {
+                    rented = new Type[l];
+                }
+
                 for (int i = 0; i < l; i++)
                 {
                     var typeArg = genericTypeArguments[i];
@@ -361,7 +457,7 @@ namespace TypeLogic.LiskovWingSubstitutions
             }
             finally
             {
-                // nothing to return when using new allocations
+                _tlsDepth--;
             }
         }
     }
