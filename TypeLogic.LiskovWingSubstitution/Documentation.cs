@@ -10,7 +10,7 @@ namespace TypeLogic.LiskovWingSubstitutions
     /// in place of another type according to the Liskov/Wing Substitution Principle.
     ///
     /// IMPORTANT: throughout this assembly the term "subtype" (and related terms like
-    /// "IsVariantOf", "IsSubtypeOf", or "IsInstanceOf") refers to the stronger,
+    /// "IsSubtypeOf", "IsSubtypeOf", or "IsInstanceOf") refers to the stronger,
     /// behavioral Liskov/Wing definition of subtyping — not merely a syntactic or
     /// structural subtyping relation (for example, name equality, matching shapes,
     /// or assignability alone).

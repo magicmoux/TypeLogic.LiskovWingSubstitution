@@ -12,7 +12,7 @@ namespace TypeLogic.LiskovWingSubstitutions
     /// according to the Liskov/Wing Substitution Principle.
     /// </summary>
     /// <remarks>
-    /// IMPORTANT: In this API, the term "subtype" (and methods named `IsVariantOf` or `IsSubtypeOf`)
+    /// IMPORTANT: In this API, the term "subtype" (and methods named `IsSubtypeOf` or `IsSubtypeOf`)
     /// refers to the stronger behavioral definition from Liskov/Wing (considering generic variance,
     /// constraints and runtime substitutability), not merely syntactic or structural subtyping.
     /// </remarks>
@@ -75,9 +75,9 @@ namespace TypeLogic.LiskovWingSubstitutions
         /// <param name="type">Source type to check.</param>
         /// <param name="expectedType">Target type to check substitutability against.</param>
         /// <returns>True if <paramref name="type"/> is considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>; otherwise false.</returns>
-        public static bool IsVariantOf(this TypeInfo type, Type expectedType)
+        public static bool IsSubtypeOf(this TypeInfo type, Type expectedType)
         {
-            return IsVariantOf(type.AsType(), expectedType, out var substitutionType);
+            return IsSubtypeOf(type.AsType(), expectedType, out var substitutionType);
         }
 
         /// <summary>
@@ -88,9 +88,9 @@ namespace TypeLogic.LiskovWingSubstitutions
         /// <param name="expectedType">Target type to check substitutability against.</param>
         /// <param name="runtimeType">When this method returns, contains the runtime type that can be used to satisfy <paramref name="expectedType"/>, or null if not applicable.</param>
         /// <returns>True if <paramref name="type"/> is considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>; otherwise false.</returns>
-        public static bool IsVariantOf(this TypeInfo type, Type expectedType, out Type runtimeType)
+        public static bool IsSubtypeOf(this TypeInfo type, Type expectedType, out Type runtimeType)
         {
-            return IsVariantOf(type.AsType(), expectedType, out runtimeType);
+            return IsSubtypeOf(type.AsType(), expectedType, out runtimeType);
         }
 #endif
 
@@ -100,9 +100,9 @@ namespace TypeLogic.LiskovWingSubstitutions
         /// <param name="type">Source type to check.</param>
         /// <param name="expectedType">Target type to check substitutability against.</param>
         /// <returns>True if <paramref name="type"/> is considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>; otherwise false.</returns>
-        public static bool IsVariantOf(this Type type, Type expectedType)
+        public static bool IsSubtypeOf(this Type type, Type expectedType)
         {
-            return IsVariantOf(type, expectedType, out var substitutionType);
+            return IsSubtypeOf(type, expectedType, out var substitutionType);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace TypeLogic.LiskovWingSubstitutions
         /// <param name="expectedType">Target type to check substitutability against.</param>
         /// <param name="runtimeType">When this method returns, contains the runtime type that can be used to satisfy <paramref name="expectedType"/>, or null if not applicable.</param>
         /// <returns>True if <paramref name="type"/> is considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>; otherwise false.</returns>
-        public static bool IsVariantOf(this Type type, Type expectedType, out Type runtimeType)
+        public static bool IsSubtypeOf(this Type type, Type expectedType, out Type runtimeType)
         {
             runtimeType = null;
             if (type == null || expectedType == null) return false;
@@ -173,7 +173,7 @@ namespace TypeLogic.LiskovWingSubstitutions
                 if (type.IsArray && expectedTypeGenericDefinition == typeof(IEnumerable<>))
                 {
                     var elemType = type.GetElementType();
-                    if (elemType.IsVariantOf(expectedTypeArguments[0], out var substitutedArg))
+                    if (elemType.IsSubtypeOf(expectedTypeArguments[0], out var substitutedArg))
                     {
                         runtimeType = typeof(IEnumerable<>).MakeGenericType(substitutedArg);
                         var info = ConversionInfo.Register(cacheKey, runtimeType);
@@ -299,7 +299,7 @@ namespace TypeLogic.LiskovWingSubstitutions
 
                     if (!expectedTypeArg.IsGenericParameter)
                     {
-                        if (!typeArg.IsVariantOf(expectedTypeArg, out var substitutedArg))
+                        if (!typeArg.IsSubtypeOf(expectedTypeArg, out var substitutedArg))
                         {
                             _satisfiesConstraintsCache.TryAdd(handleKey, _negativeSentinel);
                             return false;
@@ -311,7 +311,7 @@ namespace TypeLogic.LiskovWingSubstitutions
                         var constraints = _genericParamConstraintsCache.GetOrAdd(expectedTypeArg, key => key.GetGenericParameterConstraints());
                         for (int c = 0; c < constraints.Length; c++)
                         {
-                            if (!typeArg.IsVariantOf(constraints[c], out var _))
+                            if (!typeArg.IsSubtypeOf(constraints[c], out var _))
                             {
                                 _satisfiesConstraintsCache.TryAdd(handleKey, _negativeSentinel);
                                 return false;
@@ -464,7 +464,7 @@ namespace TypeLogic.LiskovWingSubstitutions
 
                     if (!expectedTypeArg.IsGenericParameter)
                     {
-                        if (!typeArg.IsVariantOf(expectedTypeArg, out var substitutedArg))
+                        if (!typeArg.IsSubtypeOf(expectedTypeArg, out var substitutedArg))
                         {
                             _satisfiesConstraintsCache.TryAdd(handleKey, _negativeSentinel);
                             return false;
@@ -476,7 +476,7 @@ namespace TypeLogic.LiskovWingSubstitutions
                         var constraints = _genericParamConstraintsCache.GetOrAdd(expectedTypeArg, key => key.GetGenericParameterConstraints());
                         for (int c = 0; c < constraints.Length; c++)
                         {
-                            if (!typeArg.IsVariantOf(constraints[c], out var _))
+                            if (!typeArg.IsSubtypeOf(constraints[c], out var _))
                             {
                                 _satisfiesConstraintsCache.TryAdd(handleKey, _negativeSentinel);
                                 return false;
