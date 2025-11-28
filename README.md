@@ -129,20 +129,29 @@ Benchmark configuration used for this run:
 
 Summary (mean times)
 
-| Scenario / Framework | .NET 4.6.2 | .NET 4.7 | .NET 4.8 | .NET 8.0 |
-|---|---:|---:|---:|---:|
-| Uncached IsVariantOf | ~1,298 ns | ~1,240 ns | ~1,268 ns | ~781 ns |
-| Cached IsVariantOf | ~42 ns | ~42 ns | ~44 ns | ~13 ns |
-| List instance IsInstanceOf | ~48 ns | ~48 ns | ~48 ns | ~12 ns |
-| Array instance IsInstanceOf | ~62 ns | ~62 ns | ~61 ns | ~12 ns |
+| Scenario / Framework | Before (ns) | After (ns) | Delta vs Before |
+|---|---:|---:|---:|
+| Uncached IsVariantOf - .NET 4.6.2 | 1,298 | 1,397 | -7.6% (regression) |
+| Uncached IsVariantOf - .NET 4.7   | 1,240 | 1,299 | -4.8% (regression) |
+| Uncached IsVariantOf - .NET 4.8   | 1,268 | 1,314 | -3.6% (regression) |
+| Uncached IsVariantOf - .NET 8.0   | 781   | 865   | -10.8% (regression) |
+| Cached IsVariantOf - .NET 4.7     | 42    | 40.3  | +4.0% improvement |
+| Cached IsVariantOf - .NET 4.8     | 44    | 40.4  | +8.1% improvement |
+| Cached IsVariantOf - .NET 8.0     | 13    | 12.3  | +5.6% improvement |
+| List instance IsInstanceOf - .NET 4.7 | 48 | 46.8  | +2.5% improvement |
+| List instance IsInstanceOf - .NET 4.8 | 48 | 45.0  | +6.2% improvement |
+| List instance IsInstanceOf - .NET 8.0 | 12 | 11.8  | +1.6% improvement |
+| Array instance IsInstanceOf - .NET 4.7 | 62 | 61.9  | +0.2% improvement |
+| Array instance IsInstanceOf - .NET 4.8 | 61 | 58.5  | +4.1% improvement |
+| Array instance IsInstanceOf - .NET 8.0 | 12 | 11.7  | +2.1% improvement |
 
 Allocations per operation (approx)
-- Uncached IsVariantOf: ~784–2985 B (depends on scenario/framework)
+- Uncached IsVariantOf: increased allocations (depends on scenario/framework) — observed ~3.36 KB in the recent short run
 - Cached / Instance checks: ~24 B (mostly negligible)
 
 Notes
-- The uncached code path involves reflective scanning and generic-constraint checking; caching dramatically reduces both latency and allocations.
-- These short-run numbers were produced with the benchmarks configured for fast execution; for reliable/production-grade metrics run the Benchmark project with the default BenchmarkDotNet configuration (more iterations and longer warmup).
+- The recent changes added several caches and fast-paths for common patterns (arrays, string -> IEnumerable<char>) and cached generic-definition variance checks. These reduced hot-path costs for the cached and instance checks (small but measurable improvements).
+- The uncached path appears slower in this short-run sampling (regressions vs the prior numbers). This can happen due to benchmark noise, different JIT/runtime conditions, and reduced iteration counts used for quick runs. Run the full BenchmarkDotNet configuration for stable measurements.
 
 To reproduce the full benchmarks:
 

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace TypeLogic.LiskovWingSubstitutions
 {
@@ -33,6 +34,9 @@ namespace TypeLogic.LiskovWingSubstitutions
         // Cache for generic parameter constraints arrays
         private static readonly ConcurrentDictionary<Type, Type[]> _genericParamConstraintsCache = new ConcurrentDictionary<Type, Type[]>();
 
+        // Cache for generic-definition variance checks (pair of generic definitions)
+        private static readonly ConcurrentDictionary<VariantTypePair, bool> _genericDefVarianceCache = new ConcurrentDictionary<VariantTypePair, bool>();
+
         /// <summary>
         /// Clears the internal conversion and reflection caches used by <see cref="IsVariantOf(Type, Type, out Type)"/>.
         /// </summary>
@@ -49,6 +53,7 @@ namespace TypeLogic.LiskovWingSubstitutions
             _implementedGenericInterfaceCache.Clear();
             _satisfiesConstraintsCache.Clear();
             _genericParamConstraintsCache.Clear();
+            _genericDefVarianceCache.Clear();
         }
 
 #if NET45_OR_GREATER || NETSTANDARD2_0
@@ -145,6 +150,28 @@ namespace TypeLogic.LiskovWingSubstitutions
             var expectedTypeArguments = GetGenericArgumentsCached(expectedType);
             int expectedArgCount = expectedTypeArguments.Length;
 
+            // Fast-path: arrays to IEnumerable<T> and string to IEnumerable<char>
+            if (type.IsArray && expectedTypeGenericDefinition == typeof(IEnumerable<>))
+            {
+                var elemType = type.GetElementType();
+                if (elemType.IsVariantOf(expectedTypeArguments[0], out var substitutedArg))
+                {
+                    runtimeType = typeof(IEnumerable<>).MakeGenericType(substitutedArg);
+                    _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
+                    return true;
+                }
+            }
+            if (type == typeof(string) && expectedTypeGenericDefinition == typeof(IEnumerable<>))
+            {
+                var tArg = expectedTypeArguments.Length > 0 ? expectedTypeArguments[0] : null;
+                if (tArg == typeof(char))
+                {
+                    runtimeType = typeof(IEnumerable<char>);
+                    _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
+                    return true;
+                }
+            }
+
             if (!expectedType.IsInterface)
             {
                 // walk base types without LINQ, cache generic definition checks
@@ -181,7 +208,9 @@ namespace TypeLogic.LiskovWingSubstitutions
                 Type implemented = GetImplementedGenericInterface(type, expectedTypeGenericDefinition, expectedArgCount);
                 if (implemented != null)
                 {
-                    if (SatisfiesTypeConstraints(implemented, expectedType, out runtimeType))
+                    // check variance of generic definitions using cached decisions
+                    var implGenDef = GetGenericDefinitionCached(implemented);
+                    if (IsGenericDefinitionVariantOf(implGenDef, expectedTypeGenericDefinition) && SatisfiesTypeConstraints(implemented, expectedType, out runtimeType))
                     {
                         _conversionCache.TryAdd(cacheKey, ConversionInfo.Register(cacheKey, runtimeType));
                         return true;
@@ -193,16 +222,22 @@ namespace TypeLogic.LiskovWingSubstitutions
             return false;
         }
 
+        // informational; not available on .NET 4.0 : [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        [MethodImpl((MethodImplOptions)256)]
         private static Type GetGenericDefinitionCached(Type t)
         {
             return _genericDefCache.GetOrAdd(t, key => key.IsGenericType ? key.GetGenericTypeDefinition() : null);
         }
 
+        // informational; not available on .NET 4.0 : [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        [MethodImpl((MethodImplOptions)256)]
         private static Type[] GetGenericArgumentsCached(Type t)
         {
             return _genericArgsCache.GetOrAdd(t, key => key.GetGenericArguments());
         }
 
+        // informational; not available on .NET 4.0 : [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        [MethodImpl((MethodImplOptions)256)]
         private static Type[] GetInterfacesCached(Type t)
         {
             return _interfacesCache.GetOrAdd(t, key => key.GetInterfaces());
@@ -212,6 +247,8 @@ namespace TypeLogic.LiskovWingSubstitutions
         /// Looks up (and caches) the interface implemented by <paramref name="type"/> that has the generic definition <paramref name="expectedGenericDefinition"/>.
         /// Returns null if no such interface is implemented by <paramref name="type"/>.
         /// </summary>
+        // informational; not available on .NET 4.0 : [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        [MethodImpl((MethodImplOptions)256)]
         private static Type GetImplementedGenericInterface(Type type, Type expectedGenericDefinition, int expectedArgCount)
         {
             if (expectedGenericDefinition == null) return null;
@@ -247,6 +284,19 @@ namespace TypeLogic.LiskovWingSubstitutions
 
             _implementedGenericInterfaceCache.TryAdd(key, _negativeSentinel);
             return null;
+        }
+
+        // informational; not available on .NET 4.0 : [MethodImpl(MethodImplOptions.AggressiveInlining)] 
+        [MethodImpl((MethodImplOptions)256)]
+        private static bool IsGenericDefinitionVariantOf(Type defA, Type defB)
+        {
+            if (defA == defB) return true;
+            var key = new VariantTypePair(defA, defB);
+            if (_genericDefVarianceCache.TryGetValue(key, out var cached)) return cached;
+            // Fallback to existing IsVariantOf logic for generic definitions
+            var result = defA.IsVariantOf(defB);
+            _genericDefVarianceCache.TryAdd(key, result);
+            return result;
         }
 
         /// <summary>

@@ -6,9 +6,10 @@
     <AssemblyName>TypeLogic.LiskovWingSubstitution</AssemblyName>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     
-    <!-- Assembly Signing (disabled for local builds where snk is not available) -->
+    <!-- Assembly Signing: enable only if SNK exists -->
     <SignAssembly>false</SignAssembly>
-    <!-- <AssemblyOriginatorKeyFile>$(SolutionDir)TypeLogic.LiskovWingSubstitution.snk</AssemblyOriginatorKeyFile> -->
+    <SignAssembly Condition="Exists('$(SolutionDir)TypeLogic.LiskovWingSubstitution.snk')">true</SignAssembly>
+    <AssemblyOriginatorKeyFile Condition="Exists('$(SolutionDir)TypeLogic.LiskovWingSubstitution.snk')">$(SolutionDir)TypeLogic.LiskovWingSubstitution.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
     
     <!-- NuGet Package Info -->
