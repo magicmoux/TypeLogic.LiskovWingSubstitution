@@ -119,27 +119,31 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Performance (updated)
+## Performance — comparison vs initial baseline
 
-Short-run benchmark results (current run) vs initial baseline in `benchmarks-ref/initial-benchmarks.md`.
+This section summarizes the short-run benchmark comparison between the latest run (`benchmarks/current-benchmarks.md`) and the reference initial run (`benchmarks/initial-benchmarks.md`). The initial run is used as the reference unit; deltas are shown as percent change and multiplicative factor (Current / Initial).
 
-| Scenario / Framework | Baseline (ns) | Current (ns) | Delta |
-|---|---:|---:|---:|
-| Uncached IsSubtypeOf - .NET 4.6.2 | 1396.541 | 1892.235 | -35.5% (regression) |
-| Uncached IsSubtypeOf - .NET 4.7   | 1299.461 | 1909.931 | -47.0% (regression) |
-| Uncached IsSubtypeOf - .NET 4.8   | 1313.819 | 1957.479 | -49.0% (regression) |
-| Uncached IsSubtypeOf - .NET 8.0   | 865.385  | 1287.775 | -48.8% (regression) |
-| Cached IsSubtypeOf - .NET 4.7     | 40.293   | 36.782  | +8.7% improvement |
-| Cached IsSubtypeOf - .NET 4.8     | 40.438   | 35.957  | +11.2% improvement |
-| Cached IsSubtypeOf - .NET 8.0     | 12.268   | 7.813   | +36.3% improvement |
+Summary (Initial ? Current):
+
+| Scenario / Framework | Initial (ns) | Current (ns) | Change | Factor (Current / Initial) |
+|---|---:|---:|---:|---:|
+| Uncached (baseline) — .NET Framework 4.6.2 | 422.69 | 3,202.41 | +657.6% | 7.58× |
+| Uncached (baseline) — .NET Framework 4.7   | 432.04 | 3,183.21 | +636.9% | 7.37× |
+| Uncached (baseline) — .NET Framework 4.8   | 439.17 | 3,127.82 | +612.3% | 7.12× |
+| Uncached (baseline) — .NET 8.0             | 275.60 | 2,380.74 | +763.7% | 8.64× |
+| Cached (fast path) — .NET Framework 4.7    | 31.53  | 29.45   | ?6.6%  | 0.93× |
+| Cached (fast path) — .NET Framework 4.8    | 31.48  | 29.54   | ?6.2%  | 0.94× |
+| Cached (fast path) — .NET 8.0              | 8.29   | 5.11    | ?38.4% | 0.62× |
+| List-instance — .NET Framework 4.7         | 35.30  | 32.64   | ?7.5%  | 0.93× |
+| List-instance — .NET Framework 4.8         | 35.08  | 32.28   | ?8.0%  | 0.92× |
+| List-instance — .NET 8.0                   | 8.46   | 5.87    | ?30.6% | 0.69× |
+| Array-instance — .NET Framework 4.7        | 46.76  | 44.00   | ?5.9%  | 0.94× |
+| Array-instance — .NET Framework 4.8        | 46.06  | 43.74   | ?5.0%  | 0.95× |
+| Array-instance — .NET 8.0                  | 8.35   | 5.83    | ?30.1% | 0.70× |
 
 Notes
-- These are short-run, locally produced numbers. Use full BenchmarkDotNet runs for stable results.
-- Baseline data is taken from `benchmarks-ref/initial-benchmarks.md`.
-
-## References
-
-This project is based on the work of Barbara Liskov and Jeannette Wing on the Substitution Principle and behavioral subtyping.
-
-- [Barbara Liskov's Substitution Principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle)
-- [Jeannette Wing's work on behavioral subtyping](https://www.cs.cmu.edu/~wing/publications/LiskovWing94.pdf)
+- Initial / Current values are taken from `benchmarks/initial-benchmarks.md` and `benchmarks/current-benchmarks.md` respectively.
+- Both runs were short, local runs (reduced warmup/iteration counts). Use a full BenchmarkDotNet configuration for stable, reproducible numbers.
+- Large regressions on the uncached path indicate substantial runtime/alloc differences between runs; investigate benchmark configuration, GC, and environmental noise before assuming a code regression.
+- Where a scenario is missing from the current run it is omitted from the table (marked N/A if present in only one file).
+- Full artifacts for both runs are under `BenchmarkDotNet.Artifacts/results/` and the extracted summaries are in `benchmarks/`.
