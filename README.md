@@ -29,6 +29,14 @@ The library supports comprehensive behavioral subtype checking:
 - Support for generic type definitions
 - Cached subtype relationship checks
 
+## Contributing
+
+Contributions are welcome! Please feel free to signal issues or submit Pull Requests.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
 ## Usage
 
 ### Installation
@@ -82,7 +90,7 @@ using TypeLogic.LiskovWingSubstitutions;
 bool isSubtype = typeof(List<int>).IsSubtypeOf(typeof(IEnumerable<>));
 ```
 
-### Instance conversion into closest runtime substitute type
+### Instance conversion into most similar runtime subtype
 
 _still in progress_
 
@@ -102,24 +110,16 @@ var converted = instance.ConvertAs(typeof(IEnumerable<>));
 // Should return an instance of IEnumerable<char> instead of String
 ```
 
-### Performance Optimization
+## Performance Informations
 
-The library includes several performance optimizations:
+The library includes several performance optimizations since its first version:
 
-- Type relationship caching
+- Type relationship caching improvement
 - Lazy delegate compilation for instance conversions
 - Efficient type constraint validation
 - Optimized generic type handling
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Performance – comparison vs initial baseline (Updated: Nov 29, 2024)
+### FYI : optimizations since initial version
 
 **🎉 Recent optimizations have significantly improved performance!**
 
@@ -156,10 +156,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 | **Number of cache dictionaries** | 12 | **11** | **-8%** ✅ |
 
 **⚠️ Notes:**
-- **Uncached allocations**: The apparent increase (802 B → 4,910 B) is due to benchmark methodology including `ClearCache()` which reinitializes **11 dictionaries** (instead of 12) with optimized capacities. This significantly improves subsequent call performance (0 allocations in cached mode).
+- **Uncached allocations**: The apparent increase (802 B → 4,910 B) is due to benchmark methodology including `ClearCache()` which reinitializes **11 dictionaries** with optimized capacities. This significantly improves subsequent call performance (0 allocations in cached mode).
 - **.NET 8 cached**: The apparent regression is due to different benchmark methodology. The real gain is in **allocations: 0 B** instead of 56 B (**-100%** improvement).
 
-### Latest optimization (#7): _conversionCache elimination
+**Benchmarking notes:**
+- Both runs were short, local runs (reduced warmup/iteration counts). Use a full BenchmarkDotNet configuration for stable, reproducible numbers.
+
+### Latest optimization benefis
 
 **Date**: November 29, 2024  
 **Impact**:
@@ -167,19 +170,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - ✅ **-490 B** per uncached call
 - ✅ **-69 MB** global allocations (-8.3%)
 - ✅ **+2.4%** faster mixed workloads
-- ✅ **Simpler code**: 11 caches instead of 12
-
-**Before**:
-```csharp
-// 2 conversion caches with fallback logic
-_conversionCache (SubtypeMatch) + _conversionCacheHandles (HandlePair)
-```
-
-**After**:
-```csharp
-// Single unified cache
-_conversionCacheHandles (HandlePair only)
-```
 
 ### Real-world impact
 
@@ -189,17 +179,3 @@ _conversionCacheHandles (HandlePair only)
 - **Subsequent calls (cached)**: 31 ns with **0 allocations** (vs 56 B) ✅
 - **GC pressure**: Reduced by **100%** in steady-state ✅
 - **Throughput**: Improved by **350%** for mixed workloads ⚡
-- **Code complexity**: Reduced with **1 less cache dictionary** ✅
-
-### Detailed reports
-
-- **Full comparison**: See [`benchmarks/performance-comparison-report.md`](benchmarks/performance-comparison-report.md)
-- **Initial baseline**: [`benchmarks/initial-benchmarks.md`](benchmarks/initial-benchmarks.md)
-- **Current results**: [`benchmarks/current-benchmarks.md`](benchmarks/current-benchmarks.md)
-
----
-
-**Benchmarking notes:**
-- Both runs were short, local runs (reduced warmup/iteration counts). Use a full BenchmarkDotNet configuration for stable, reproducible numbers.
-- Full BenchmarkDotNet artifacts are available under `BenchmarkDotNet.Artifacts/results/`.
-- All unit tests passing (5/5) after each optimization.
