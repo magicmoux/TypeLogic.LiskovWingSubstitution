@@ -1,15 +1,23 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 
 namespace TypeLogic.LiskovWingSubstitutions
 {
     public static partial class ConversionExtensions
     {
-        private static readonly Lazy<MethodInfo> LazyConvertAsDefinition = new Lazy<MethodInfo>(() => 
-            typeof(ConversionExtensions).GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
-                .Where(m => m.Name == "ConvertAs" && m.GetGenericArguments().Count() == 2)
-                .FirstOrDefault()?.GetGenericMethodDefinition());
+        private static readonly Lazy<MethodInfo> LazyConvertAsDefinition = new Lazy<MethodInfo>(() =>
+        {
+            var methods = typeof(ConversionExtensions).GetMethods(BindingFlags.NonPublic | BindingFlags.Static);
+            foreach (var m in methods)
+            {
+                if (m.Name != "ConvertAs") continue;
+                if (m.GetGenericArguments().Length == 2)
+                {
+                    return m.GetGenericMethodDefinition();
+                }
+            }
+            return null;
+        });
 
         private static MethodInfo ConvertAsDefinition => LazyConvertAsDefinition.Value;
 
@@ -72,7 +80,7 @@ namespace TypeLogic.LiskovWingSubstitutions
 
         private static TOut ConvertAs<T, TOut>(this T instance, Type expectedType)
         {
-            var key = new VariantTypePair(typeof(T), expectedType);
+            var key = new SubtypeMatch(typeof(T), expectedType);
             if (TypeExtensions._conversionCache.TryGetValue(key, out var conversion) && conversion.IsConvertible && conversion.Converter != null)
             {
                 try

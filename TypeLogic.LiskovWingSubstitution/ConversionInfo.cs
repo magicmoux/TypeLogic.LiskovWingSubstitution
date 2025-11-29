@@ -11,7 +11,7 @@ namespace TypeLogic.LiskovWingSubstitutions
         /// <summary>
         /// Builds a lazy delegate factory for converting from the source type to the runtime type.
         /// </summary>
-        private static readonly Func<VariantTypePair, Type, Lazy<Delegate>> BuildDelegate =
+        private static readonly Func<SubtypeMatch, Type, Lazy<Delegate>> BuildDelegate =
             (t, rt) => new Lazy<Delegate>(() => CreateDelegate(t.Source, rt));
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace TypeLogic.LiskovWingSubstitutions
         /// <param name="typePair">The source/target type pair used as cache key.</param>
         /// <param name="runtimeType">The resolved runtime type to use for conversion.</param>
         /// <returns>A new <see cref="ConversionInfo"/> instance containing the runtime type and converter factory.</returns>
-        public static ConversionInfo Register(VariantTypePair typePair, Type runtimeType)
+        public static ConversionInfo Register(SubtypeMatch typePair, Type runtimeType)
         {
             // If the runtimeType provided is the same as the source, and the target is a generic type definition,
             // try to locate a constructed base type on the source that matches that generic definition.

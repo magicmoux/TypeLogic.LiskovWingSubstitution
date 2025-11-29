@@ -6,22 +6,36 @@
 [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-4.0%2B-blue.svg)](https://dotnet.microsoft.com/)
 [![Tests](https://img.shields.io/badge/Tests-.NET%204.6.2--8.0-blue.svg)](https://dotnet.microsoft.com/)
 
-A .NET library implementing the Liskov/Wing Substitution Principle for type variance checking (including generic typeParameters constraints validation). 
+A .NET library to check behavioral subtyping following the Liskov/Wing definition of substitutability (including generic type parameter constraints validation). 
 
-This project emerged from previous R&D tests dealing with .NET generics: I needed an additional simple way to verify type variance against GenericTypeDefinition, complementing .NET's built-in type system capabilities.
+This project emerged from previous R&D tests dealing with .NET generics: I needed a minimal api to check substitutability against GenericTypes and GenericTypeDefinitions, complementing .NET's built-in type system capabilities.
 
-What started as an experiment  to simplify variance checking turned into a full-fledged library that extends .NET's type system that you may find educational or even practical in some cases. The implementation is based from Barbara Liskov's and Jeannette Wing's work on behavioral subtyping, providing additional variance checking capabilities when working with GenericTypeDefinitions (especially in cases where non-generic Type inheritance is absent, as illustrated in the examples).
+What started as an experiment to simplify checking subtyping validity turned into a full-fledged library that extends .NET's type system. The implementation is based on Barbara Liskov's and Jeannette Wing's work on behavioral subtyping and provides additional checking capabilities when working with GenericTypeDefinitions (especially in cases where non-generic Type inheritance is absent, as exposed by some examples).
 
 ## Features
 
-- Type variance checking according to Liskov/Wing Substitution Principle
+- Behavioral subtype checking following the Liskov/Wing definition of substitutability
 - Support for generic type parameter constraints
-- Caching of type variance relationships for performance
-- Instance-based variance checking
+- Caching of subtype relationships for performance
+- Instance-based subtype checking
 - Support for generic type definitions
 - Full support for .NET Standard 2.0 and .NET Framework 4.0+
 
-## Installation
+- ## Features in Detail
+
+### Behavioral Subtype Checking
+
+The library implements comprehensive behavioral subtype checking:
+
+- Direct type equality
+- Interface and inheritance hierarchy traversal
+- Generic type parameter constraints validation
+- Support for generic type definitions
+- Cached subtype relationship checks
+
+## Usage
+
+### Installation
 
 The package can be installed via NuGet:
 
@@ -29,29 +43,27 @@ The package can be installed via NuGet:
 dotnet add package TypeLogic.LiskovWingSubstitution
 ```
 
-## Usage
-
-### Basic Type Variance Checking
+### Basic Behavioral Subtype Checking
 
 ```csharp
 using TypeLogic.LiskovWingSubstitutions;
 
-// Check if List<string> is variant of IEnumerable<object>
-bool isVariant = typeof(List<string>).IsSubtypeOf(typeof(IEnumerable<object>));
+// Check if List<string> can be used in place of IEnumerable<object>
+bool isSubtype = typeof(List<string>).IsSubtypeOf(typeof(IEnumerable<object>));
 
-// Check with runtime type information
-bool isVariantWithType = typeof(List<string>).IsSubtypeOf(typeof(IEnumerable<object>), out Type runtimeType);
+// Check subtyping and provides the runtimeType substitute
+bool isSubtypeWithRuntimeType = typeof(List<string>).IsSubtypeOf(typeof(IEnumerable<object>), out Type runtimeType);
 ```
 
-### Instance-Based Variance Checking
+### Instance-Based Subtype Checking
 
 ```csharp
 using TypeLogic.LiskovWingSubstitutions;
 
 List<string> instance = new List<string>();
 
-// Check with type parameter
-bool isInstanceOfType = instance.IsInstanceOf(typeof(IEnumerable<object>), out var runtimeType);
+// Check subtyping and provides the runtimeType substitute
+bool isInstanceOfIEnumerable = instance.IsInstanceOf(typeof(IEnumerable<object>), out var runtimeType);
 // runtimeType should be IEnumerable<string>
 ```
 
@@ -60,8 +72,8 @@ using TypeLogic.LiskovWingSubstitutions;
 
 string instance = "this is a string";
 
-// Check with against generic type with the corresponding runtimeType
-bool isInstanceOfType = instance.IsInstanceOf(typeof(IEquatable<>), out var runtimeType);
+// Check subtyping against a generic interface definition
+bool isInstanceOfIEquatable = instance.IsInstanceOf(typeof(IEquatable<>), out var runtimeType);
 // runtimeType should be IEquatable<string>
 ```
 
@@ -70,36 +82,29 @@ bool isInstanceOfType = instance.IsInstanceOf(typeof(IEquatable<>), out var runt
 ```csharp
 using TypeLogic.LiskovWingSubstitutions;
 
-// Check if List<T> is variant of IEnumerable<>
-bool isGenericVariant = typeof(List<int>).IsSubtypeOf(typeof(IEnumerable<>));
-
-// Convert instance based on generic definition
-string instance = "test";
-var converted = instance.ConvertAs(typeof(IEnumerable<>)); // Converts to IEnumerable<char>
+// Check if List<T> can be considered a subtype of IEnumerable<>
+bool isSubtype = typeof(List<int>).IsSubtypeOf(typeof(IEnumerable<>));
 ```
 
-## Features in Detail
-
-### Type Variance Checking
-
-The library implements comprehensive type variance checking:
-
-- Direct type equality
-- Interface and inheritance hierarchy traversal
-- Generic type parameter constraints validation
-- Support for generic type definitions
-- Cached type relationship checks
-
-### Instance Conversion
+### Instance conversion into closest runtime substitute type
 
 _still in progress_
 
-Provides safe instance conversion with variance checking:
+Provides safe instance conversion with behavioral checks:
 
 - Runtime type checking
 - Generic type parameter validation
 - Type constraint satisfaction verification
 - Conversion caching for performance
+
+Example
+
+```csharp
+// Convert instance based on generic definition
+string instance = "test";
+var converted = instance.ConvertAs(typeof(IEnumerable<>)); 
+// Should convert into an IEnumerable<char>
+```
 
 ### Performance Optimization
 
@@ -117,6 +122,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Maintenance
+
+Recent cleanup: removed unused `using` directives in several source files and replaced a small LINQ usage with an equivalent loop to reduce unnecessary dependencies. The solution builds after these changes.
 
 ## Performance (updated)
 

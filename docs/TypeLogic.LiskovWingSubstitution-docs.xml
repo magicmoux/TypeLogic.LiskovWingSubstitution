@@ -11,7 +11,7 @@
         according to the Liskov/Wing Substitution Principle.
 
         IMPORTANT: Throughout this documentation the term "subtype" (and related API names such as
-        "IsSubtypeOf", "IsSubtypeOf", "IsInstanceOf") is used in the stronger, behavioral sense defined by
+        "IsSubtypeOf" and "IsInstanceOf") is used in the stronger, behavioral sense defined by
         Liskov and Wing — i.e. a type S is a subtype of type T only if S can be used wherever T is expected
         without altering desirable program properties. This is NOT merely syntactic (name-based) or structural
         subtyping (shape/members) nor simply assignability by the CLR; the checks performed by this library take
@@ -25,18 +25,38 @@
     </member>
 
     <member name="M:TypeLogic.LiskovWingSubstitutions.TypeExtensions.IsSubtypeOf(System.Type,System.Type)">
-      <summary>Determines whether the source type can be considered a Liskov/Wing-style subtype of the target type.</summary>
+      <summary>Determines whether the source <paramref name="type"/> can be considered a Liskov/Wing-style subtype of the <paramref name="expectedType"/>.</summary>
       <param name="type">Source type to check.</param>
       <param name="expectedType">Target type to check substitutability against.</param>
       <returns>True if the source type is considered a behavioral subtype of the target type; otherwise false.</returns>
     </member>
 
     <member name="M:TypeLogic.LiskovWingSubstitutions.TypeExtensions.IsSubtypeOf(System.Type,System.Type,System.Type@)">
-      <summary>Determines whether the source type can be considered a Liskov/Wing-style subtype of the target type, and returns the runtime type that satisfies the substitutability check when available.</summary>
+      <summary>Determines whether the source <paramref name="type"/> can be considered a Liskov/Wing-style subtype of the <paramref name="expectedType"/>, and returns the runtime type that satisfies the substitutability check when available.</summary>
       <param name="type">Source type to check.</param>
       <param name="expectedType">Target type to check substitutability against.</param>
-      <param name="runtimeType">When this method returns, contains the runtime type that can be used to satisfy expected type, or null if not applicable.</param>
+      <param name="runtimeType">When this method returns, contains the runtime type that can be used to satisfy <paramref name="expectedType"/>, or null if not applicable.</param>
       <returns>True if the source type is considered a behavioral subtype of the target type; otherwise false.</returns>
+    </member>
+
+    <member name="M:TypeLogic.LiskovWingSubstitutions.TypeExtensions.IsSubtypeOf(System.Reflection.TypeInfo,System.Type)">
+      <summary>TypeInfo overload. Determines whether the provided <paramref name="type"/> can be considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>.</summary>
+      <param name="type">Source <see cref="System.Reflection.TypeInfo"/> to check.</param>
+      <param name="expectedType">Target type to check substitutability against.</param>
+      <returns>True if the source type is considered a behavioral subtype of the target type; otherwise false.</returns>
+    </member>
+
+    <member name="M:TypeLogic.LiskovWingSubstitutions.TypeExtensions.IsSubtypeOf(System.Reflection.TypeInfo,System.Type,System.Type@)">
+      <summary>TypeInfo overload. Determines whether the provided <paramref name="type"/> can be considered a Liskov/Wing-style subtype of <paramref name="expectedType"/>, and returns the runtime type that satisfies the substitutability check when available.</summary>
+      <param name="type">Source <see cref="System.Reflection.TypeInfo"/> to check.</param>
+      <param name="expectedType">Target type to check substitutability against.</param>
+      <param name="runtimeType">When this method returns, contains the runtime type that can be used to satisfy <paramref name="expectedType"/>, or null if not applicable.</param>
+      <returns>True if the source type is considered a behavioral subtype of the target type; otherwise false.</returns>
+    </member>
+
+    <member name="M:TypeLogic.LiskovWingSubstitutions.TypeExtensions.ClearCache">
+      <summary>Clears internal caches used to speed up subtype and conversion lookups.</summary>
+      <remarks>Useful when running repeated tests or benchmarks to ensure consistent uncached execution paths.</remarks>
     </member>
 
     <member name="T:TypeLogic.LiskovWingSubstitutions.ConversionExtensions">
@@ -45,10 +65,30 @@
     </member>
 
     <member name="M:TypeLogic.LiskovWingSubstitutions.ConversionExtensions.ConvertAs``1(System.Object,System.Type)">
-      <summary>Attempts to convert the instance to an object that satisfies <paramref name="expectedType"/> according to the library's substitution rules.</summary>
+      <summary>Attempts to convert the <paramref name="instance"/> to an object that satisfies <paramref name="expectedType"/> according to the library's substitution rules.</summary>
       <param name="instance">Instance to convert.</param>
       <param name="expectedType">Target type to convert to (may be a generic definition).</param>
       <returns>A converted instance if conversion is possible; otherwise null.</returns>
+    </member>
+
+    <member name="M:TypeLogic.LiskovWingSubstitutions.ConversionExtensions.IsInstanceOf``2(System.Object)">
+      <summary>Determines whether the generic instance is considered an instance of the target generic parameter <typeparamref name="TOut"/> according to behavioral subtyping rules.</summary>
+      <returns>True if the instance type is a behavioral subtype of <typeparamref name="TOut"/>; otherwise false.</returns>
+    </member>
+
+    <member name="M:TypeLogic.LiskovWingSubstitutions.ConversionExtensions.IsInstanceOf``1(System.Object,System.Type)">
+      <summary>Determines whether the instance can be considered an instance of the specified <paramref name="targetType"/> according to behavioral subtyping rules.</summary>
+      <param name="instance">Instance to check.</param>
+      <param name="targetType">Target type to check substitutability against.</param>
+      <returns>True if the instance's runtime type is a behavioral subtype of <paramref name="targetType"/>; otherwise false.</returns>
+    </member>
+
+    <member name="M:TypeLogic.LiskovWingSubstitutions.ConversionExtensions.IsInstanceOf``1(System.Object,System.Type,System.Type@)">
+      <summary>Determines whether the instance can be considered an instance of the specified <paramref name="targetType"/>, and returns the runtime type that satisfies the substitutability check when available.</summary>
+      <param name="instance">Instance to check.</param>
+      <param name="targetType">Target type to check substitutability against.</param>
+      <param name="runtimeType">When this method returns, contains the runtime type that can be used to satisfy <paramref name="targetType"/>, or null if not applicable.</param>
+      <returns>True if the instance's runtime type is a behavioral subtype of <paramref name="targetType"/>; otherwise false.</returns>
     </member>
 
     <member name="T:TypeLogic.LiskovWingSubstitutions.ConversionInfo">

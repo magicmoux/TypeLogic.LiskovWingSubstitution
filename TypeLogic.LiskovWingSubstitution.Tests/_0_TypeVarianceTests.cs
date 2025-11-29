@@ -6,11 +6,14 @@ using Xunit;
 namespace TypeLogic.LiskovWingSubstitutions.Tests
 {
     /// <summary>
-    /// Contains unit tests that verify type variance resolution and runtime substitution behavior.
+    /// Contains unit tests that verify Liskow-Wing substitutability.
     /// </summary>
     public class TypeVarianceTests
     {
         [Fact]
+        /// <summary>
+        /// Trivial checks for direct subtyping relationships that should be satisfied by native .NET Type.IsAssignableFrom method
+        /// </summary>
         public void Tests_00_Direct_Subtyping_Checks()
         {
             Type runtimeType = null;

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
+#if NET45_OR_GREATER || NETSTANDARD2_0
 using System.Reflection;
-using System.Runtime.CompilerServices;
+#endif
 
 namespace TypeLogic.LiskovWingSubstitutions
 {
@@ -12,7 +12,7 @@ namespace TypeLogic.LiskovWingSubstitutions
     /// according to the Liskov/Wing Substitution Principle.
     /// </summary>
     /// <remarks>
-    /// IMPORTANT: In this API, the term "subtype" (and methods named `IsSubtypeOf` or `IsSubtypeOf`)
+    /// IMPORTANT: In this API, the term "subtype" (and methods named `IsSubtypeOf`)
     /// refers to the stronger behavioral definition from Liskov/Wing (considering generic variance,
     /// constraints and runtime substitutability), not merely syntactic or structural subtyping.
     /// </remarks>
@@ -28,7 +28,7 @@ namespace TypeLogic.LiskovWingSubstitutions
             public override int GetHashCode() => A.GetHashCode() * 397 ^ B.GetHashCode();
         }
 
-        internal static readonly ConcurrentDictionary<VariantTypePair, ConversionInfo> _conversionCache = new ConcurrentDictionary<VariantTypePair, ConversionInfo>();
+        internal static readonly ConcurrentDictionary<SubtypeMatch, ConversionInfo> _conversionCache = new ConcurrentDictionary<SubtypeMatch, ConversionInfo>();
         private static readonly ConcurrentDictionary<HandlePair, ConversionInfo> _conversionCacheHandles = new ConcurrentDictionary<HandlePair, ConversionInfo>();
 
         private static readonly ConcurrentDictionary<Type, Type> _genericDefCache = new ConcurrentDictionary<Type, Type>();
@@ -45,7 +45,7 @@ namespace TypeLogic.LiskovWingSubstitutions
         private static readonly ConcurrentDictionary<Type, Type[]> _genericParamConstraintsCache = new ConcurrentDictionary<Type, Type[]>();
 
         private static readonly ConcurrentDictionary<HandlePair, bool> _genericDefVarianceCache = new ConcurrentDictionary<HandlePair, bool>();
-        private static readonly ConcurrentDictionary<VariantTypePair, byte> _inProgress = new ConcurrentDictionary<VariantTypePair, byte>();
+        private static readonly ConcurrentDictionary<SubtypeMatch, byte> _inProgress = new ConcurrentDictionary<SubtypeMatch, byte>();
 
         [ThreadStatic] private static Type[] _tlsTempBuffer;
         [ThreadStatic] private static int _tlsDepth;
@@ -82,6 +82,7 @@ namespace TypeLogic.LiskovWingSubstitutions
 
         /// <summary>
         /// Determines whether <paramref name="type"/> can be considered a subtype of <paramref name="expectedType"/>,
+
         /// and returns the runtime type that satisfies the substitutability check when available.
         /// </summary>
         /// <param name="type">Source type to check.</param>
@@ -122,7 +123,7 @@ namespace TypeLogic.LiskovWingSubstitutions
                 runtimeType = type; return true;
             }
 
-            var cacheKey = new VariantTypePair(type, expectedType);
+            var cacheKey = new SubtypeMatch(type, expectedType);
             var handleKey = new HandlePair(type.TypeHandle, expectedType.TypeHandle);
 
             if (_conversionCacheHandles.TryGetValue(handleKey, out var cachedHandleEntry))
