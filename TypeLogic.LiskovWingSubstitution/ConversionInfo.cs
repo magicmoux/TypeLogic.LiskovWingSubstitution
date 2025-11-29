@@ -6,13 +6,13 @@ namespace TypeLogic.LiskovWingSubstitutions
     /// <summary>
     /// Holds information about a discovered conversion between a source type and a runtime type used for substitution.
     /// </summary>
-    internal sealed class ConversionInfo
+    internal readonly struct ConversionInfo
     {
         /// <summary>
         /// Builds a lazy delegate factory for converting from the source type to the runtime type.
         /// </summary>
         private static readonly Func<SubtypeMatch, Type, Lazy<Delegate>> BuildDelegate =
-            (t, rt) => new Lazy<Delegate>(() => CreateDelegate(t.Source, rt));
+            (t, rt) => rt != null ? new Lazy<Delegate>(() => CreateDelegate(t.Source, rt)) : null;
 
         /// <summary>
         /// Gets the resolved runtime type that can be used to satisfy the expected type.
@@ -26,8 +26,9 @@ namespace TypeLogic.LiskovWingSubstitutions
 
         /// <summary>
         /// A sentinel <see cref="ConversionInfo"/> representing a negative (non-convertible) result.
+        /// This is now represented by default(ConversionInfo) where RuntimeType == null.
         /// </summary>
-        public static readonly ConversionInfo Negative = new ConversionInfo(null, null);
+        public static readonly ConversionInfo Negative = default;
 
         private ConversionInfo(Type runtimeType, Lazy<Delegate> converter)
         {
