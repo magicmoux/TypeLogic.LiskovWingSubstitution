@@ -21,11 +21,7 @@ What started as an experiment to simplify checking subtyping validity turned int
 - Support for generic type definitions
 - Full support for .NET Standard 2.0 and .NET Framework 4.0+
 
-## Features in Detail
-
-### Behavioral Subtype Checking
-
-The library implements comprehensive behavioral subtype checking:
+The library supports comprehensive behavioral subtype checking:
 
 - Direct type equality
 - Interface and inheritance hierarchy traversal
