@@ -123,10 +123,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Maintenance
-
-Recent cleanup: removed unused `using` directives in several source files and replaced a small LINQ usage with an equivalent loop to reduce unnecessary dependencies. The solution builds after these changes.
-
 ## Performance (updated)
 
 Short-run benchmark results (current run) vs initial baseline in `benchmarks-ref/initial-benchmarks.md`.
