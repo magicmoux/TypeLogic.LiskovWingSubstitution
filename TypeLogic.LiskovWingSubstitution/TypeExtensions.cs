@@ -50,8 +50,9 @@ namespace TypeLogic.LiskovWingSubstitutions
         private const int InitialCacheCapacity = 16;
         private const int InitialSmallCacheCapacity = 8;
 
-        internal static readonly ConcurrentDictionary<SubtypeMatch, ConversionInfo> _conversionCache = new ConcurrentDictionary<SubtypeMatch, ConversionInfo>(Environment.ProcessorCount, InitialCacheCapacity);
-        private static readonly ConcurrentDictionary<HandlePair, ConversionInfo> _conversionCacheHandles = new ConcurrentDictionary<HandlePair, ConversionInfo>(Environment.ProcessorCount, InitialCacheCapacity);
+        // Cache principal unifié basé sur HandlePair (RuntimeTypeHandle)
+        // Internal pour accès depuis ConversionExtensions
+        internal static readonly ConcurrentDictionary<HandlePair, ConversionInfo> _conversionCacheHandles = new ConcurrentDictionary<HandlePair, ConversionInfo>(Environment.ProcessorCount, InitialCacheCapacity);
 
         private static readonly ConcurrentDictionary<Type, Type> _genericDefCache = new ConcurrentDictionary<Type, Type>(Environment.ProcessorCount, InitialSmallCacheCapacity);
         private static readonly ConcurrentDictionary<Type, Type[]> _genericArgsCache = new ConcurrentDictionary<Type, Type[]>(Environment.ProcessorCount, InitialSmallCacheCapacity);
@@ -74,7 +75,6 @@ namespace TypeLogic.LiskovWingSubstitutions
 
         public static void ClearCache()
         {
-            _conversionCache.Clear();
             _conversionCacheHandles.Clear();
             _genericDefCache.Clear();
             _genericArgsCache.Clear();
@@ -130,6 +130,7 @@ namespace TypeLogic.LiskovWingSubstitutions
 
         /// <summary>
         /// Determines whether <paramref name="type"/> can be considered a subtype of <paramref name="expectedType"/>,
+
         /// and returns the runtime type that satisfies the substitutability check when available.
         /// </summary>
         /// <param name="type">Source type to check.</param>
@@ -145,7 +146,7 @@ namespace TypeLogic.LiskovWingSubstitutions
                 runtimeType = type; return true;
             }
 
-            // Prioriser le cache basé sur HandlePair (plus rapide)
+            // Cache unifié basé sur HandlePair (RuntimeTypeHandle) - plus rapide que SubtypeMatch (Type)
             var handleKey = new HandlePair(type.TypeHandle, expectedType.TypeHandle);
             
             if (_conversionCacheHandles.TryGetValue(handleKey, out var cachedEntry))
@@ -155,39 +156,29 @@ namespace TypeLogic.LiskovWingSubstitutions
                 return true;
             }
 
-            // Fallback sur le cache legacy SubtypeMatch (pour compatibilité)
-            var cacheKey = new SubtypeMatch(type, expectedType);
-            if (_conversionCache.TryGetValue(cacheKey, out var cachedLegacy))
-            {
-                if (!cachedLegacy.IsConvertible) return false;
-                runtimeType = cachedLegacy.RuntimeType;
-                // Migrer vers le cache HandlePair pour les futurs accès
-                _conversionCacheHandles.TryAdd(handleKey, cachedLegacy);
-                return true;
-            }
-
             if (type.ContainsGenericParameters && !expectedType.ContainsGenericParameters)
             {
                 var neg = ConversionInfo.Negative;
                 _conversionCacheHandles.TryAdd(handleKey, neg);
-                _conversionCache.TryAdd(cacheKey, neg);
                 return false;
             }
 
             if (expectedType.IsAssignableFrom(type))
             {
+                // Note: SubtypeMatch toujours utilisé pour ConversionInfo.Register (compatibilité avec ConversionExtensions)
+                var cacheKey = new SubtypeMatch(type, expectedType);
                 var info = ConversionInfo.Register(cacheKey, expectedType);
                 _conversionCacheHandles.TryAdd(handleKey, info);
-                _conversionCache.TryAdd(cacheKey, info);
                 runtimeType = info.RuntimeType; 
                 return true;
             }
 
-            if (!_inProgress.TryAdd(cacheKey, 0))
+            // Créer SubtypeMatch uniquement pour _inProgress (détection récursion)
+            var progressKey = new SubtypeMatch(type, expectedType);
+            if (!_inProgress.TryAdd(progressKey, 0))
             {
                 var neg = ConversionInfo.Negative;
                 _conversionCacheHandles.TryAdd(handleKey, neg);
-                _conversionCache.TryAdd(cacheKey, neg);
                 return false;
             }
 
@@ -204,9 +195,9 @@ namespace TypeLogic.LiskovWingSubstitutions
                     if (elemType.IsSubtypeOf(expectedTypeArguments[0], out var substitutedArg))
                     {
                         runtimeType = typeof(IEnumerable<>).MakeGenericType(substitutedArg);
+                        var cacheKey = new SubtypeMatch(type, expectedType);
                         var info = ConversionInfo.Register(cacheKey, runtimeType);
                         _conversionCacheHandles.TryAdd(handleKey, info);
-                        _conversionCache.TryAdd(cacheKey, info);
                         return true;
                     }
                 }
@@ -216,9 +207,9 @@ namespace TypeLogic.LiskovWingSubstitutions
                     if (tArg == typeof(char))
                     {
                         runtimeType = typeof(IEnumerable<char>);
+                        var cacheKey = new SubtypeMatch(type, expectedType);
                         var info = ConversionInfo.Register(cacheKey, runtimeType);
                         _conversionCacheHandles.TryAdd(handleKey, info);
-                        _conversionCache.TryAdd(cacheKey, info);
                         return true;
                     }
                 }
@@ -230,9 +221,9 @@ namespace TypeLogic.LiskovWingSubstitutions
                     {
                         if (baseGens[i] == expectedTypeGenericDefinition)
                         {
+                            var cacheKey = new SubtypeMatch(type, expectedType);
                             var info = ConversionInfo.Register(cacheKey, type);
                             _conversionCacheHandles.TryAdd(handleKey, info);
-                            _conversionCache.TryAdd(cacheKey, info);
                             runtimeType = info.RuntimeType; 
                             return true;
                         }
@@ -249,9 +240,9 @@ namespace TypeLogic.LiskovWingSubstitutions
                             {
                                 var constructed = GetGenericDefinitionCached(expectedType).MakeGenericType(args);
                                 _satisfiesConstraintsCache.TryAdd(new HandlePair(type.TypeHandle, expectedType.TypeHandle), constructed);
+                                var cacheKey = new SubtypeMatch(type, expectedType);
                                 var info = ConversionInfo.Register(cacheKey, constructed);
                                 _conversionCacheHandles.TryAdd(handleKey, info);
-                                _conversionCache.TryAdd(cacheKey, info);
                                 runtimeType = constructed; 
                                 return true;
                             }
@@ -268,9 +259,9 @@ namespace TypeLogic.LiskovWingSubstitutions
                             {
                                 var constructed = GetGenericDefinitionCached(expectedType).MakeGenericType(args);
                                 _satisfiesConstraintsCache.TryAdd(new HandlePair(implemented.TypeHandle, expectedType.TypeHandle), constructed);
+                                var cacheKey = new SubtypeMatch(type, expectedType);
                                 var info = ConversionInfo.Register(cacheKey, constructed);
                                 _conversionCacheHandles.TryAdd(handleKey, info);
-                                _conversionCache.TryAdd(cacheKey, info);
                                 runtimeType = constructed; 
                                 return true;
                             }
@@ -280,12 +271,11 @@ namespace TypeLogic.LiskovWingSubstitutions
 
                 var negInfo = ConversionInfo.Negative;
                 _conversionCacheHandles.TryAdd(handleKey, negInfo);
-                _conversionCache.TryAdd(cacheKey, negInfo);
                 return false;
             }
             finally
             {
-                _inProgress.TryRemove(cacheKey, out var _);
+                _inProgress.TryRemove(progressKey, out var _);
             }
         }
 

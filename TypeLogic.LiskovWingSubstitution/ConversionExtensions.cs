@@ -80,8 +80,8 @@ namespace TypeLogic.LiskovWingSubstitutions
 
         private static TOut ConvertAs<T, TOut>(this T instance, Type expectedType)
         {
-            var key = new SubtypeMatch(typeof(T), expectedType);
-            if (TypeExtensions._conversionCache.TryGetValue(key, out var conversion) && conversion.IsConvertible && conversion.Converter != null)
+            var handleKey = new TypeExtensions.HandlePair(typeof(T).TypeHandle, expectedType.TypeHandle);
+            if (TypeExtensions._conversionCacheHandles.TryGetValue(handleKey, out var conversion) && conversion.IsConvertible && conversion.Converter != null)
             {
                 try
                 {
