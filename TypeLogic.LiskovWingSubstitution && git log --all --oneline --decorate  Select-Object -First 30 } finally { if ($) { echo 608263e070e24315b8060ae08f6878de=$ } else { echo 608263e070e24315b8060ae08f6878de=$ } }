@@ -1,0 +1,20 @@
+[33m6373b67[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Major optimization checkpoint
+[33ma4ba402[m optim round #7
+[33mb358d14[m Final ? optimisation round
+[33m08606ad[m targetframeworks update
+[33mc7c0eaf[m WIP Perfs
+[33mf8b22d3[m[33m ([m[1;32mPOC-Base[m[33m)[m Benchmark updates
+[33mb0cab9f[m[33m ([m[1;35mrefs/stash[m[33m)[m On POC-Base: updated initial benchmarks
+[33m25be0df[m index on POC-Base: dbc4a7e POC Base with becthmarks
+[33m05f95f1[m untracked files on POC-Base: dbc4a7e POC Base with becthmarks
+[33md0378e7[m minor edition
+[33m627b45d[m minor edtition
+[33m440aeb8[m removed unhelpful section from readme
+[33m1b87079[m Global refactoring to conform to Liskow-Wing terminology
+[33m621d3b1[m Fix copilot method renaming regression
+[33ma2b37be[m Refactoring main method name and updating documentation
+[33me803c90[m fix Tests_02_Liskov_GenericTypeDefinitionsVarianceTests
+[33m5186de8[m fixed obsolete namespace
+[33m5d41d6e[m fixed obsolete namespace
+[33me78bb93[m benchmarks relocation
+[33mdbc4a7e[m POC Base with becthmarks
