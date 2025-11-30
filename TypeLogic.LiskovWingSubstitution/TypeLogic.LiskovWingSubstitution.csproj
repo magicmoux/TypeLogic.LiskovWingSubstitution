@@ -15,7 +15,7 @@
 
 		<!-- NuGet Package Info -->
 		<PackageId>TypeLogic.LiskovWingSubstitution</PackageId>
-		<Version>0.2.0</Version>
+		<Version>0.2.1</Version>
 		<Authors>Max Brönnimann</Authors>
 		<Company>TypeLogic</Company>
 		<Product>TypeLogic.LiskovWingSubstitution</Product>
