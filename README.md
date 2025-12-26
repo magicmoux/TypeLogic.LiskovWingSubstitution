@@ -75,7 +75,7 @@ bool isGenericVariant = typeof(List<int>).IsSubtypeOf(typeof(IEnumerable<>));
 
 // Check instance based on generic definition
 string instance = "test";
-var converted = instance.ConvertAs(typeof(IEnumerable<>)); // Matches variant type of IEnumerable<char>
+var convertible = instance.IsInstanceOf(typeof(IEnumerable<>)); // Should be true as variant instance of IEnumerable<char>
 ```
 
 ## Features in Detail
