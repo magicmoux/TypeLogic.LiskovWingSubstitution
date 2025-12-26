@@ -38,8 +38,9 @@ using TypeLogic.LiskovWingSubstitution;
 // Check if List<string> is variant of IEnumerable<object>
 bool isVariant = typeof(List<string>).IsSubtypeOf(typeof(IEnumerable<object>));
 
-// Check with runtime type information
+// Check and return the corresponding matching runtime type
 bool isVariantWithType = typeof(List<string>).IsSubtypeOf(typeof(IEnumerable<object>), out Type runtimeType);
+// runtimeType should be IEnumerable<string>
 ```
 
 ### Instance-Based Variance Checking
@@ -49,7 +50,7 @@ using TypeLogic.LiskovWingSubstitution;
 
 List<string> instance = new List<string>();
 
-// Check with type parameter
+// Check and return the corresponding matching runtime type
 bool isInstanceOfType = instance.IsInstanceOf(typeof(IEnumerable<object>), out var runtimeType);
 // runtimeType should be IEnumerable<string>
 ```
@@ -59,7 +60,7 @@ using TypeLogic.LiskovWingSubstitution;
 
 string instance = "this is a string";
 
-// Check with against generic type with the corresponding runtimeType
+// Check against generic type and return the corresponding matching runtime type
 bool isInstanceOfType = instance.IsInstanceOf(typeof(IEquatable<>), out var runtimeType);
 // runtimeType should be IEquatable<string>
 ```
@@ -72,9 +73,9 @@ using TypeLogic.LiskovWingSubstitution;
 // Check if List<T> is variant of IEnumerable<>
 bool isGenericVariant = typeof(List<int>).IsSubtypeOf(typeof(IEnumerable<>));
 
-// Convert instance based on generic definition
+// Check instance based on generic definition
 string instance = "test";
-var converted = instance.ConvertAs(typeof(IEnumerable<>)); // Converts to IEnumerable<char>
+var converted = instance.ConvertAs(typeof(IEnumerable<>)); // Matches variant type of IEnumerable<char>
 ```
 
 ## Features in Detail
