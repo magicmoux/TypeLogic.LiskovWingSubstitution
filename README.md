@@ -91,19 +91,15 @@ The library implements comprehensive type variance checking:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! 
+Please feel free to submit a Pull Request or open an issue in the repository with detailed steps to reproduce any bug or performance regression.
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Where to get help
-
-- Open an issue in the repository with detailed steps to reproduce any bug or performance regression.
-- For performance changes, include benchmark output (use `tools/compare-benchmarks.ps1` when relevant).
-
 ## References
 
-- Barbara Liskov — Liskov Substitution Principle (overview): https://en.wikipedia.org/wiki/Liskov_substitution_principle
-- Barbara Liskov and Jeannette M. Wing — "A Behavioral Notion of Subtyping" (1994) PDF: https://www.cs.cmu.edu/~wing/publications/LiskovWing94.pdf
+- Barbara Liskov â€” Liskov Substitution Principle (overview): https://en.wikipedia.org/wiki/Liskov_substitution_principle
+- Barbara Liskov and Jeannette M. Wing â€” "A Behavioral Notion of Subtyping" (1994) PDF: https://www.cs.cmu.edu/~wing/publications/LiskovWing94.pdf
 
